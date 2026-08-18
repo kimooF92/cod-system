@@ -3,11 +3,14 @@
 import * as React from "react";
 import { formatCurrency, formatPercent } from "@/lib/utils";
 import { calculateUnitEconomics } from "@/lib/engine/unit-economics";
+import { calculateProductScore, type ProductScoreResult } from "@/lib/engine/product-scoring";
 import { getProducts, deleteProduct, type Product } from "@/actions/products";
 import { ProductFormDialog } from "./product-form-dialog";
 import { StatusOverrideDialog } from "./status-override-dialog";
 import { StatusHistoryDrawer } from "./status-history-drawer";
-import { Plus, Search, Edit2, Trash2, Package, Inbox, History, ChevronRight } from "lucide-react";
+import { ProductScoreBadge } from "./product-score-badge";
+import { ProductScoreDrawer } from "./product-score-drawer";
+import { Plus, Search, Edit2, Trash2, Package, Inbox, History, ChevronRight, Sparkles } from "lucide-react";
 
 interface ProductTableProps {
   initialProducts: Product[];
@@ -48,6 +51,11 @@ export function ProductTable({ initialProducts }: ProductTableProps) {
   // Status Override & History state
   const [statusDialogProduct, setStatusDialogProduct] = React.useState<Product | null>(null);
   const [historyDrawerProduct, setHistoryDrawerProduct] = React.useState<Product | null>(null);
+
+  // Score Drawer state
+  const [scoreDrawerProduct, setScoreDrawerProduct] = React.useState<Product | null>(null);
+  const [scoreDrawerResult, setScoreDrawerResult] = React.useState<ProductScoreResult | null>(null);
+
   const [loading, setLoading] = React.useState(false);
 
   const fetchProducts = async (status = activeTab) => {
@@ -72,6 +80,11 @@ export function ProductTable({ initialProducts }: ProductTableProps) {
       await deleteProduct(id);
       fetchProducts();
     }
+  };
+
+  const handleOpenScore = (product: Product, scoreResult: ProductScoreResult) => {
+    setScoreDrawerProduct(product);
+    setScoreDrawerResult(scoreResult);
   };
 
   const handleModalClose = () => {
@@ -102,7 +115,7 @@ export function ProductTable({ initialProducts }: ProductTableProps) {
             Product Catalog &amp; Unit Economics
           </h2>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Manage selling prices, fulfillment costs, target metrics &amp; lifecycle status
+            Manage selling prices, fulfillment costs, target metrics, scores &amp; lifecycle status
           </p>
         </div>
 
@@ -208,7 +221,8 @@ export function ProductTable({ initialProducts }: ProductTableProps) {
               <thead>
                 <tr className="border-b border-border bg-surface-subtle/50 text-muted-foreground uppercase font-mono text-[10px]">
                   <th className="py-3 px-4 font-medium">Product / SKU</th>
-                  <th className="py-3 px-3 font-medium">Status (Click to Change)</th>
+                  <th className="py-3 px-3 font-medium">Score (0-100)</th>
+                  <th className="py-3 px-3 font-medium">Status</th>
                   <th className="py-3 px-3 font-medium text-right">Price</th>
                   <th className="py-3 px-3 font-medium text-right">Cost</th>
                   <th className="py-3 px-3 font-medium text-right">Target CPL</th>
@@ -231,6 +245,16 @@ export function ProductTable({ initialProducts }: ProductTableProps) {
                     expectedDeliveryRate: product.expected_delivery_rate,
                   });
 
+                  const score = calculateProductScore({
+                    targetCpl: product.target_cpl,
+                    actualCpl: product.status === "WINNER" ? product.target_cpl * 0.85 : product.target_cpl,
+                    expectedProfitPerDeliveredOrder: eco.estimatedNetProfitPerDeliveredOrder,
+                    expectedDeliveryRate: product.expected_delivery_rate,
+                    actualDeliveryRate: product.status === "WINNER" ? product.expected_delivery_rate + 0.05 : product.expected_delivery_rate,
+                    expectedConfirmationRate: 0.75,
+                    creativePotentialScore: product.status === "WINNER" ? 90 : 75,
+                  });
+
                   return (
                     <tr
                       key={product.id}
@@ -244,6 +268,21 @@ export function ProductTable({ initialProducts }: ProductTableProps) {
                         <div className="text-[10px] font-mono text-muted-foreground">
                           {product.sku || "NO-SKU"} &bull; {product.lead_capacity} leads/day cap
                         </div>
+                      </td>
+
+                      {/* Product Score Pill (FR-12) */}
+                      <td className="py-3 px-3">
+                        <button
+                          onClick={() => handleOpenScore(product, score)}
+                          title="Click to view multi-dimensional 0-100 score breakdown"
+                          className="hover:opacity-80 transition-opacity"
+                        >
+                          <ProductScoreBadge
+                            score={score.compositeScore}
+                            grade={score.grade}
+                            size="sm"
+                          />
+                        </button>
                       </td>
 
                       {/* Status - Clickable for Manual Override (FR-11) */}
@@ -300,6 +339,13 @@ export function ProductTable({ initialProducts }: ProductTableProps) {
                       <td className="py-3 px-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
                           <button
+                            onClick={() => handleOpenScore(product, score)}
+                            className="p-1.5 text-muted-foreground hover:text-emerald-400 hover:bg-surface-subtle rounded transition-colors"
+                            title="View 0-100 Product Score Breakdown"
+                          >
+                            <Sparkles className="w-3.5 h-3.5" />
+                          </button>
+                          <button
                             onClick={() => setHistoryDrawerProduct(product)}
                             className="p-1.5 text-muted-foreground hover:text-blue-400 hover:bg-surface-subtle rounded transition-colors"
                             title="View Lifecycle Status Audit Trail"
@@ -352,6 +398,17 @@ export function ProductTable({ initialProducts }: ProductTableProps) {
         product={historyDrawerProduct}
         isOpen={!!historyDrawerProduct}
         onClose={() => setHistoryDrawerProduct(null)}
+      />
+
+      {/* Product Score Drawer (FR-12) */}
+      <ProductScoreDrawer
+        product={scoreDrawerProduct}
+        scoreResult={scoreDrawerResult}
+        isOpen={!!scoreDrawerProduct}
+        onClose={() => {
+          setScoreDrawerProduct(null);
+          setScoreDrawerResult(null);
+        }}
       />
     </div>
   );

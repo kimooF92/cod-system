@@ -35,13 +35,13 @@ project_key: NOKEY
 tracking_system: file-system
 story_location: _bmad-output/implementation-artifacts
 development_status:
-  epic-1: in-progress
+  epic-1: done
   1-1-project-setup-design-system-foundation: done
   1-2-research-items-problem-promise-evaluation: done
   1-3-product-catalog-unit-economics-management: done
   1-4-product-lifecycle-state-machine-audit-history: done
   1-5-bounded-product-testing-performance-benchmarks: done
-  1-6-multi-dimensional-0-100-product-scoring-engine: backlog
+  1-6-multi-dimensional-0-100-product-scoring-engine: done
   epic-1-retrospective: optional
 
   epic-2: backlog

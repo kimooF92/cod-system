@@ -152,6 +152,7 @@ export default function DashboardPage() {
               <thead>
                 <tr className="border-b border-border text-muted-foreground uppercase font-mono text-[10px]">
                   <th className="pb-2 font-medium">Product</th>
+                  <th className="pb-2 font-medium">Score</th>
                   <th className="pb-2 font-medium">Status</th>
                   <th className="pb-2 font-medium text-right">Leads</th>
                   <th className="pb-2 font-medium text-right">CPL</th>
@@ -164,6 +165,11 @@ export default function DashboardPage() {
                 <tr className="hover:bg-surface-subtle/50 transition-colors">
                   <td className="py-2.5 font-medium text-foreground">
                     Magnetic Phone Holder Pro
+                  </td>
+                  <td className="py-2.5">
+                    <span className="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-mono text-[10px] font-bold">
+                      89 / 100
+                    </span>
                   </td>
                   <td className="py-2.5">
                     <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono text-[10px]">
@@ -186,6 +192,11 @@ export default function DashboardPage() {
                 <tr className="hover:bg-surface-subtle/50 transition-colors">
                   <td className="py-2.5 font-medium text-foreground">
                     Wireless Earbuds V2
+                  </td>
+                  <td className="py-2.5">
+                    <span className="px-2 py-0.5 rounded bg-red-500/10 text-red-400 border border-red-500/20 font-mono text-[10px]">
+                      38 / 100
+                    </span>
                   </td>
                   <td className="py-2.5">
                     <span className="px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 font-mono text-[10px]">
