@@ -272,6 +272,27 @@ export interface Database {
         };
         Update: Partial<Database["public"]["Tables"]["ads"]["Row"]>;
       };
+      ad_performance_daily: {
+        Row: {
+          id: string;
+          ad_id: string | null;
+          campaign_id: string | null;
+          creative_id: string | null;
+          product_id: string;
+          date: string;
+          spend: number;
+          impressions: number;
+          clicks: number;
+          leads: number;
+          notes: string | null;
+          created_at: string;
+        };
+        Insert: Omit<Database["public"]["Tables"]["ad_performance_daily"]["Row"], "id" | "created_at"> & {
+          id?: string;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["ad_performance_daily"]["Row"]>;
+      };
       orders: {
         Row: {
           id: string;
