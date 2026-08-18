@@ -5,7 +5,9 @@ import { formatCurrency, formatPercent } from "@/lib/utils";
 import { calculateUnitEconomics } from "@/lib/engine/unit-economics";
 import { getProducts, deleteProduct, type Product } from "@/actions/products";
 import { ProductFormDialog } from "./product-form-dialog";
-import { Plus, Search, Edit2, Trash2, Package, Inbox } from "lucide-react";
+import { StatusOverrideDialog } from "./status-override-dialog";
+import { StatusHistoryDrawer } from "./status-history-drawer";
+import { Plus, Search, Edit2, Trash2, Package, Inbox, History, ChevronRight } from "lucide-react";
 
 interface ProductTableProps {
   initialProducts: Product[];
@@ -38,8 +40,14 @@ export function ProductTable({ initialProducts }: ProductTableProps) {
   const [products, setProducts] = React.useState<Product[]>(initialProducts);
   const [activeTab, setActiveTab] = React.useState("ALL");
   const [searchQuery, setSearchQuery] = React.useState("");
+  
+  // Product Form Dialog state
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [editingProduct, setEditingProduct] = React.useState<Product | null>(null);
+
+  // Status Override & History state
+  const [statusDialogProduct, setStatusDialogProduct] = React.useState<Product | null>(null);
+  const [historyDrawerProduct, setHistoryDrawerProduct] = React.useState<Product | null>(null);
   const [loading, setLoading] = React.useState(false);
 
   const fetchProducts = async (status = activeTab) => {
@@ -200,7 +208,7 @@ export function ProductTable({ initialProducts }: ProductTableProps) {
               <thead>
                 <tr className="border-b border-border bg-surface-subtle/50 text-muted-foreground uppercase font-mono text-[10px]">
                   <th className="py-3 px-4 font-medium">Product / SKU</th>
-                  <th className="py-3 px-3 font-medium">Status</th>
+                  <th className="py-3 px-3 font-medium">Status (Click to Change)</th>
                   <th className="py-3 px-3 font-medium text-right">Price</th>
                   <th className="py-3 px-3 font-medium text-right">Cost</th>
                   <th className="py-3 px-3 font-medium text-right">Target CPL</th>
@@ -238,15 +246,18 @@ export function ProductTable({ initialProducts }: ProductTableProps) {
                         </div>
                       </td>
 
-                      {/* Status */}
+                      {/* Status - Clickable for Manual Override (FR-11) */}
                       <td className="py-3 px-3">
-                        <span
-                          className={`px-2 py-0.5 rounded-full border text-[10px] font-mono tracking-wide ${
+                        <button
+                          onClick={() => setStatusDialogProduct(product)}
+                          className={`px-2.5 py-1 rounded-full border text-[10px] font-mono tracking-wide flex items-center gap-1 hover:brightness-125 transition-all ${
                             statusStyles[product.status] || statusStyles.READY
                           }`}
+                          title="Click to override status with reason (FR-11)"
                         >
-                          {product.status}
-                        </span>
+                          <span>{product.status}</span>
+                          <ChevronRight className="w-3 h-3 opacity-60" />
+                        </button>
                       </td>
 
                       {/* Price & Cost */}
@@ -289,6 +300,13 @@ export function ProductTable({ initialProducts }: ProductTableProps) {
                       <td className="py-3 px-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
                           <button
+                            onClick={() => setHistoryDrawerProduct(product)}
+                            className="p-1.5 text-muted-foreground hover:text-blue-400 hover:bg-surface-subtle rounded transition-colors"
+                            title="View Lifecycle Status Audit Trail"
+                          >
+                            <History className="w-3.5 h-3.5" />
+                          </button>
+                          <button
                             onClick={() => handleEdit(product)}
                             className="p-1.5 text-muted-foreground hover:text-blue-400 hover:bg-surface-subtle rounded transition-colors"
                             title="Edit Product"
@@ -319,6 +337,21 @@ export function ProductTable({ initialProducts }: ProductTableProps) {
         onClose={handleModalClose}
         onSuccess={() => fetchProducts()}
         initialProduct={editingProduct}
+      />
+
+      {/* Status Override Dialog (FR-11) */}
+      <StatusOverrideDialog
+        product={statusDialogProduct}
+        isOpen={!!statusDialogProduct}
+        onClose={() => setStatusDialogProduct(null)}
+        onSuccess={() => fetchProducts()}
+      />
+
+      {/* Status History Audit Drawer (AD-3) */}
+      <StatusHistoryDrawer
+        product={historyDrawerProduct}
+        isOpen={!!historyDrawerProduct}
+        onClose={() => setHistoryDrawerProduct(null)}
       />
     </div>
   );
