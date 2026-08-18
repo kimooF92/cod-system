@@ -138,6 +138,60 @@ export interface Database {
         };
         Update: Partial<Database["public"]["Tables"]["product_tests"]["Row"]>;
       };
+      product_scores: {
+        Row: {
+          id: string;
+          product_id: string;
+          composite_score: number;
+          cpl_score: number;
+          profit_score: number;
+          delivery_score: number;
+          confirmation_score: number;
+          creative_score: number;
+          breakdown_json: Json | null;
+          calculated_at: string;
+        };
+        Insert: Omit<Database["public"]["Tables"]["product_scores"]["Row"], "id" | "calculated_at"> & {
+          id?: string;
+          calculated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["product_scores"]["Row"]>;
+      };
+      marketing_angles: {
+        Row: {
+          id: string;
+          product_id: string;
+          name: string;
+          pain_point: string;
+          promise: string;
+          target_customer_avatar: string;
+          creative_format: string;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Omit<Database["public"]["Tables"]["marketing_angles"]["Row"], "id" | "created_at" | "updated_at"> & {
+          id?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["marketing_angles"]["Row"]>;
+      };
+      marketing_hooks: {
+        Row: {
+          id: string;
+          angle_id: string;
+          hook_text: string;
+          hook_type: string;
+          notes: string | null;
+          created_at: string;
+        };
+        Insert: Omit<Database["public"]["Tables"]["marketing_hooks"]["Row"], "id" | "created_at"> & {
+          id?: string;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["marketing_hooks"]["Row"]>;
+      };
       orders: {
         Row: {
           id: string;
