@@ -38,3 +38,8 @@ next-env.d.ts
 .uv-cache/
 __pycache__/
 *.pyc
+
+# bmad internal tooling & render
+_bmad/
+.bmad/
+
