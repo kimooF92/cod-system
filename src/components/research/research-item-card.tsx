@@ -1,8 +1,10 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { formatCurrency, formatPercent } from "@/lib/utils";
 import { updateResearchStatus, deleteResearchItem, type ResearchItem } from "@/actions/research";
+import { convertResearchToProduct } from "@/actions/products";
 import type { ResearchStatus } from "@/lib/validations/research";
 import { Sparkles, Trash2, ArrowRight } from "lucide-react";
 
@@ -20,7 +22,9 @@ const statusColors: Record<string, string> = {
 };
 
 export function ResearchItemCard({ item, onRefresh }: ResearchItemCardProps) {
+  const router = useRouter();
   const [updating, setUpdating] = React.useState(false);
+  const [converting, setConverting] = React.useState(false);
 
   const grossMargin =
     item.estimated_price > 0
@@ -32,6 +36,18 @@ export function ResearchItemCard({ item, onRefresh }: ResearchItemCardProps) {
     await updateResearchStatus(item.id, newStatus);
     setUpdating(false);
     onRefresh();
+  };
+
+  const handleConvert = async () => {
+    setConverting(true);
+    const res = await convertResearchToProduct(item.id);
+    setConverting(false);
+    if (res.success) {
+      onRefresh();
+      router.push("/products");
+    } else {
+      alert(res.error || "Failed to convert research item to product");
+    }
   };
 
   const handleDelete = async () => {
@@ -122,13 +138,27 @@ export function ResearchItemCard({ item, onRefresh }: ResearchItemCardProps) {
           </div>
         </div>
 
-        <button
-          onClick={handleDelete}
-          className="p-1.5 text-muted-foreground hover:text-red-400 hover:bg-surface-subtle rounded transition-colors"
-          title="Delete Research Item"
-        >
-          <Trash2 className="w-3.5 h-3.5" />
-        </button>
+        <div className="flex items-center gap-2">
+          {item.status !== "CONVERTED" && (
+            <button
+              onClick={handleConvert}
+              disabled={converting}
+              className="flex items-center gap-1 px-2.5 py-1 rounded bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 border border-blue-500/20 text-xs font-medium transition-colors"
+              title="Convert to Product without re-typing (FR-8)"
+            >
+              <span>{converting ? "Converting..." : "Convert to Product"}</span>
+              <ArrowRight className="w-3 h-3" />
+            </button>
+          )}
+
+          <button
+            onClick={handleDelete}
+            className="p-1.5 text-muted-foreground hover:text-red-400 hover:bg-surface-subtle rounded transition-colors"
+            title="Delete Research Item"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
       </div>
     </div>
   );
