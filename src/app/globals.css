@@ -1,0 +1,65 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: #090A0C;
+    --foreground: #F1F5F9;
+    --card: #111317;
+    --card-foreground: #F1F5F9;
+    --surface: #111317;
+    --surface-subtle: #181B20;
+    --border: #23272F;
+    --muted: #181B20;
+    --muted-foreground: #8E96A4;
+    --primary: #2563EB;
+    --primary-hover: #1D4ED8;
+    --primary-foreground: #FFFFFF;
+  }
+
+  .light {
+    --background: #F8FAFC;
+    --foreground: #0F172A;
+    --card: #FFFFFF;
+    --card-foreground: #0F172A;
+    --surface: #FFFFFF;
+    --surface-subtle: #F1F5F9;
+    --border: #E2E8F0;
+    --muted: #F1F5F9;
+    --muted-foreground: #64748B;
+    --primary: #2563EB;
+    --primary-hover: #1D4ED8;
+    --primary-foreground: #FFFFFF;
+  }
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Monospace Tabular Figures for Financial Alignment */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-mono), "JetBrains Mono", "SF Mono", Menlo, monospace;
+}
+
+/* Zero AI Gradient / Crisp Solid Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--background);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground);
+}

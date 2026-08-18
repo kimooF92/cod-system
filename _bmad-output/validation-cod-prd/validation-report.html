@@ -1,0 +1,508 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>PRD Validation: COD E-commerce Growth OS</title>
+<style>
+  :root {
+    --bg: #fafaf9;
+    --surface: #ffffff;
+    --border: #e7e5e4;
+    --text: #1c1917;
+    --muted: #78716c;
+    --verdict-strong: #16a34a;
+    --verdict-adequate: #65a30d;
+    --verdict-thin: #d97706;
+    --verdict-broken: #dc2626;
+    --sev-low: #64748b;
+    --sev-medium: #ca8a04;
+    --sev-high: #ea580c;
+    --sev-critical: #dc2626;
+    --grade-exc: #16a34a;
+    --grade-good: #65a30d;
+    --grade-fair: #d97706;
+    --grade-poor: #dc2626;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    font-size: 15px;
+  }
+  .container { max-width: 960px; margin: 0 auto; padding: 32px 24px 64px; }
+  header.report-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 24px;
+  }
+  .title h1 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.01em; }
+  .title .subtitle { color: var(--muted); font-size: 13px; margin-top: 4px; font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+  .grade {
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-weight: 600;
+    color: white;
+    font-size: 15px;
+    white-space: nowrap;
+  }
+  .grade-fair { background: var(--grade-fair); }
+  .synthesis {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--muted);
+    border-radius: 8px;
+    padding: 18px 22px;
+    margin-bottom: 24px;
+    font-size: 15.5px;
+  }
+  .synthesis p { margin: 0 0 10px; }
+  .synthesis p:last-child { margin-bottom: 0; }
+  .dimension-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+  .dim-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+  }
+  .dim-card .dim-name { font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+  .dim-card .dim-verdict { font-size: 14px; font-weight: 600; }
+  section.dimension, section.reviewer-section { margin-bottom: 14px; }
+  section.dimension details, section.reviewer-section details {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  section summary {
+    padding: 14px 20px;
+    cursor: pointer;
+    user-select: none;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  section summary::-webkit-details-marker { display: none; }
+  section summary::before {
+    content: "▸";
+    display: inline-block;
+    color: var(--muted);
+    transition: transform 0.15s ease;
+  }
+  section details[open] summary::before { transform: rotate(90deg); }
+  section summary h2 {
+    display: inline;
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+    flex: 1;
+  }
+  .verdict-pill {
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: white;
+  }
+  .verdict-strong { background: var(--verdict-strong); }
+  .verdict-adequate { background: var(--verdict-adequate); }
+  .verdict-thin { background: var(--verdict-thin); }
+  .verdict-broken { background: var(--verdict-broken); }
+  .dim-body { padding: 4px 20px 18px; }
+  .dim-judgment { color: var(--text); font-size: 14.5px; }
+  .dim-judgment p { margin: 0 0 10px; }
+  .findings-list { padding: 0 20px 4px; }
+  article.finding {
+    padding: 14px 0;
+    border-top: 1px solid var(--border);
+  }
+  article.finding:first-child { border-top: none; }
+  article.finding header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+  }
+  .badge {
+    font-size: 10.5px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    line-height: 1.4;
+  }
+  .badge-sev-low { background: rgba(100,116,139,0.12); color: var(--sev-low); }
+  .badge-sev-medium { background: rgba(202,138,4,0.14); color: var(--sev-medium); }
+  .badge-sev-high { background: rgba(234,88,12,0.14); color: var(--sev-high); }
+  .badge-sev-critical { background: rgba(220,38,38,0.14); color: var(--sev-critical); }
+  .finding-title { margin: 0; font-size: 15px; font-weight: 500; flex: 1; min-width: 200px; }
+  .finding-location { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12.5px; color: var(--muted); }
+  .finding-note, .finding-fix { margin-top: 6px; font-size: 14px; }
+  .finding-fix strong { color: var(--muted); font-weight: 500; }
+  .mechanical {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-top: 24px;
+    font-size: 14px;
+  }
+  .mechanical h3 { margin: 0 0 10px; font-size: 14px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  .mechanical ul { margin: 0; padding-left: 20px; }
+  .mechanical li { margin-bottom: 4px; color: var(--text); }
+  footer.report-footer {
+    margin-top: 40px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--muted);
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  footer .meta { display: flex; gap: 24px; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+  <div class="container">
+
+    <header class="report-header">
+      <div class="title">
+        <h1>COD E-commerce Growth OS — Validation Report</h1>
+        <div class="subtitle">COD E-commerce Growth OS — Product Requirements Document.md</div>
+      </div>
+      <div class="grade grade-fair">Fair</div>
+    </header>
+
+    <div class="synthesis">
+      <p>This is a well-scoped, honest PRD for a hobby/solo project. The Vision, lifecycle model, and Decision Engine are genuinely load-bearing — not furniture. Strategic coherence is strong: the thesis is clear and every feature group traces back to the operating loop in §1.</p>
+      <p>The biggest risk is <strong>done-ness clarity</strong>: FR-12 (Product Score) and FR-23 (Creative recommendation) have no formula, no output spec, and no criteria — a developer cannot implement them without inventing the model. These two high findings push the grade to Fair. Shape fit is strong; the PRD correctly skips over-formalization for a solo product.</p>
+    </div>
+
+    <div class="dimension-summary">
+      <div class="dim-card">
+        <div class="dim-name">Decision-readiness</div>
+        <div class="dim-verdict" style="color: var(--verdict-adequate)">adequate</div>
+      </div>
+      <div class="dim-card">
+        <div class="dim-name">Substance over theater</div>
+        <div class="dim-verdict" style="color: var(--verdict-strong)">strong</div>
+      </div>
+      <div class="dim-card">
+        <div class="dim-name">Strategic coherence</div>
+        <div class="dim-verdict" style="color: var(--verdict-strong)">strong</div>
+      </div>
+      <div class="dim-card">
+        <div class="dim-name">Done-ness clarity</div>
+        <div class="dim-verdict" style="color: var(--verdict-thin)">thin</div>
+      </div>
+      <div class="dim-card">
+        <div class="dim-name">Scope honesty</div>
+        <div class="dim-verdict" style="color: var(--verdict-adequate)">adequate</div>
+      </div>
+      <div class="dim-card">
+        <div class="dim-name">Downstream usability</div>
+        <div class="dim-verdict" style="color: var(--verdict-adequate)">adequate</div>
+      </div>
+      <div class="dim-card">
+        <div class="dim-name">Shape fit</div>
+        <div class="dim-verdict" style="color: var(--verdict-strong)">strong</div>
+      </div>
+    </div>
+
+    <!-- Decision-readiness -->
+    <section class="dimension">
+      <details>
+        <summary>
+          <h2>Decision-readiness</h2>
+          <span class="verdict-pill verdict-adequate">adequate</span>
+        </summary>
+        <div class="dim-body">
+          <div class="dim-judgment">
+            <p>The Vision states three concrete questions the app must answer and the product loop is explicit. Trade-offs are surfaced honestly: no auth, no integrations, no AI. The non-goals list (§3.2) does real work. The single-owner constraint (§8.1) is stated as a decision, not buried.</p>
+            <p>What keeps this from <em>strong</em>: there are no open questions, no [ASSUMPTION] tags, and no [NOTE FOR PM] callouts. A few genuinely deferred decisions — Vercel deployment security, sample-size edge cases in the Decision Engine — are absorbed silently rather than named.</p>
+          </div>
+        </div>
+        <div class="findings-list">
+          <article class="finding">
+            <header>
+              <span class="badge badge-sev-medium">medium</span>
+              <h3 class="finding-title">Deployment security posture deferred without callout</h3>
+              <span class="finding-location">§8.3</span>
+            </header>
+            <div class="finding-note">"Any optional deployment-level protection is outside the application requirements" passes the question to the operator without flagging it as an open decision.</div>
+            <div class="finding-fix"><strong>Fix:</strong> Add [NOTE FOR PM] noting that basic HTTP auth or IP allowlisting at the Vercel layer is the expected mitigation and should be confirmed before go-live.</div>
+          </article>
+          <article class="finding">
+            <header>
+              <span class="badge badge-sev-low">low</span>
+              <h3 class="finding-title">Confidence thresholds named but not documented</h3>
+              <span class="finding-location">FR-13, FR-15</span>
+            </header>
+            <div class="finding-note">LOW / MEDIUM / HIGH confidence levels are named but the sample-size triggers are not stated.</div>
+            <div class="finding-fix"><strong>Fix:</strong> Add: "Minimum sample thresholds for each confidence level are configurable in Settings."</div>
+          </article>
+        </div>
+      </details>
+    </section>
+
+    <!-- Substance over theater -->
+    <section class="dimension">
+      <details>
+        <summary>
+          <h2>Substance over theater</h2>
+          <span class="verdict-pill verdict-strong">strong</span>
+        </summary>
+        <div class="dim-body">
+          <div class="dim-judgment">
+            <p>No persona theater — one operator, four concrete journeys. No innovation theater — the PRD does not claim novelty it does not have. The defaults table (§1) is product-specific. The Decision Engine rationale (§5.3) earns its detail. Finance correctly scopes out accounting.</p>
+            <p>NFRs as a standalone section are absent, which is correct — constraints (no auth, Vercel/Supabase, server-side business logic) are embedded where they apply.</p>
+          </div>
+        </div>
+        <div class="findings-list">
+          <article class="finding">
+            <header>
+              <span class="badge badge-sev-low">low</span>
+              <h3 class="finding-title">UJ format is formulaic</h3>
+              <span class="finding-location">§2.2</span>
+            </header>
+            <div class="finding-note">All four UJs follow "The owner opens X, reviews Y, does Z." Internally consistent; no substance gap, but see protagonist note in Mechanical.</div>
+            <div class="finding-fix"><strong>Fix:</strong> Give the operator a name inline to add protagonist context.</div>
+          </article>
+        </div>
+      </details>
+    </section>
+
+    <!-- Strategic coherence -->
+    <section class="dimension">
+      <details>
+        <summary>
+          <h2>Strategic coherence</h2>
+          <span class="verdict-pill verdict-strong">strong</span>
+        </summary>
+        <div class="dim-body">
+          <div class="dim-judgment">
+            <p>Clear thesis: COD businesses fail at product kill decisions and cash control; this app closes that loop. Every major feature group — Decision Engine, cash buckets, monthly review, scale planning — traces back to §1. Success Metrics (§10) are operational, not vanity. Counter-metric is present and sharp: "do not optimize for more screens, more automation, or more data entry."</p>
+            <p>MVP scope maps 1:1 to feature sections. No orphan capabilities. One gap: Analytics appears in the nav but has no FR section.</p>
+          </div>
+        </div>
+        <div class="findings-list">
+          <article class="finding">
+            <header>
+              <span class="badge badge-sev-low">low</span>
+              <h3 class="finding-title">Analytics nav entry has no backing FR section</h3>
+              <span class="finding-location">§7 IA</span>
+            </header>
+            <div class="finding-note">Analytics appears in top-level nav but no FR section covers it. A developer building the nav has no signal on what goes there.</div>
+            <div class="finding-fix"><strong>Fix:</strong> Add one sentence: "Analytics aggregates the metrics defined in §6 across time ranges; no dedicated FRs beyond Dashboard and Monthly Review."</div>
+          </article>
+        </div>
+      </details>
+    </section>
+
+    <!-- Done-ness clarity -->
+    <section class="dimension">
+      <details open>
+        <summary>
+          <h2>Done-ness clarity</h2>
+          <span class="verdict-pill verdict-thin">thin</span>
+        </summary>
+        <div class="dim-body">
+          <div class="dim-judgment">
+            <p>This is the dimension that most limits the PRD's ability to directly feed story creation. FRs name fields and capability statements but rarely include a testable consequence. FR-12 (Product Score) has no formula, score range, or output description. FR-23 (Creative recommendation) has no criteria for WINNER/KEEP/ITERATE/KILL. FR-3 does not define what "requiring a decision" means. FR-41 does not state which fields the next-month draft pre-fills.</p>
+            <p>The Acceptance Criteria section (§11) partially mitigates by naming integration and formula invariants, but it does not cover the behavioural FRs above. Downstream story creation will require significant interpretive work.</p>
+          </div>
+        </div>
+        <div class="findings-list">
+          <article class="finding">
+            <header>
+              <span class="badge badge-sev-high">high</span>
+              <h3 class="finding-title">FR-12 Product Score has no formula or output spec</h3>
+              <span class="finding-location">§5.2, FR-12</span>
+            </header>
+            <div class="finding-note">Score range, weighting approach, and output shape are undefined. A developer cannot implement this without inventing the model.</div>
+            <div class="finding-fix"><strong>Fix:</strong> Add: score range (e.g. 0–100), weighting approach (equal / configurable / weighted), whether the output is a composite number or a multi-dimension table.</div>
+          </article>
+          <article class="finding">
+            <header>
+              <span class="badge badge-sev-high">high</span>
+              <h3 class="finding-title">FR-23 Creative recommendation has no criteria</h3>
+              <span class="finding-location">§5.4, FR-23</span>
+            </header>
+            <div class="finding-note">WINNER / KEEP / ITERATE / KILL thresholds are not defined anywhere in the document.</div>
+            <div class="finding-fix"><strong>Fix:</strong> State criteria (e.g. "WINNER when CPL ≤ target and delivery rate ≥ target over N leads") or cross-reference Decision Engine logic in §5.3 and Settings.</div>
+          </article>
+          <article class="finding">
+            <header>
+              <span class="badge badge-sev-medium">medium</span>
+              <h3 class="finding-title">FR-3 "requiring a decision" has no trigger definition</h3>
+              <span class="finding-location">§5.1, FR-3</span>
+            </header>
+            <div class="finding-note">The Dashboard must surface products "requiring a decision" but no event or condition is defined that moves a product into this state.</div>
+            <div class="finding-fix"><strong>Fix:</strong> Add: "A product requires a decision when the Decision Engine has a recommendation that has not yet been accepted or overridden."</div>
+          </article>
+          <article class="finding">
+            <header>
+              <span class="badge badge-sev-medium">medium</span>
+              <h3 class="finding-title">Sample thresholds for confidence levels not stated</h3>
+              <span class="finding-location">§5.3, FR-13, FR-15</span>
+            </header>
+            <div class="finding-note">Confidence levels LOW/MEDIUM/HIGH are named but the sample-size thresholds that trigger each are not documented or cross-referenced to Settings.</div>
+            <div class="finding-fix"><strong>Fix:</strong> Document MIN_SAMPLE_LOW and MIN_SAMPLE_MEDIUM defaults and note they are configurable in Settings.</div>
+          </article>
+          <article class="finding">
+            <header>
+              <span class="badge badge-sev-medium">medium</span>
+              <h3 class="finding-title">FR-41 next-month draft fields and defaults not stated</h3>
+              <span class="finding-location">§5.7, FR-41</span>
+            </header>
+            <div class="finding-note">"Generate an editable next-month draft" does not specify which fields are pre-filled or from where.</div>
+            <div class="finding-fix"><strong>Fix:</strong> List pre-filled fields and sources (e.g. "winners from current WINNER products, testing budget from current month's actual testing spend").</div>
+          </article>
+          <article class="finding">
+            <header>
+              <span class="badge badge-sev-low">low</span>
+              <h3 class="finding-title">FR-39 ranking sort key implicit</h3>
+              <span class="finding-location">§5.7, FR-39</span>
+            </header>
+            <div class="finding-note">Rankings (best/worst product, most profitable, best delivery, best CPL) do not state the sort field.</div>
+            <div class="finding-fix"><strong>Fix:</strong> Clarify per ranking (e.g. "most profitable = highest net profit").</div>
+          </article>
+        </div>
+      </details>
+    </section>
+
+    <!-- Scope honesty -->
+    <section class="dimension">
+      <details>
+        <summary>
+          <h2>Scope honesty</h2>
+          <span class="verdict-pill verdict-adequate">adequate</span>
+        </summary>
+        <div class="dim-body">
+          <div class="dim-judgment">
+            <p>Non-Goals (§3.2) and Out-of-Scope (§9) are both present and usefully redundant. Future Possibilities (§12) explicitly says "intentionally not part of the current product contract." No [ASSUMPTION] tags — not a blocker at this stake level, but CSV import format and single-business isolation are absorbed silently.</p>
+          </div>
+        </div>
+        <div class="findings-list">
+          <article class="finding">
+            <header>
+              <span class="badge badge-sev-medium">medium</span>
+              <h3 class="finding-title">FR-25 CSV import schema unspecified</h3>
+              <span class="finding-location">§5.4, FR-25</span>
+            </header>
+            <div class="finding-note">Format, column mapping, and validation behavior are not specified beyond "validates malformed rows" in §11.</div>
+            <div class="finding-fix"><strong>Fix:</strong> Add: "CSV format expected to match Meta Ads performance export schema; required columns defined at implementation."</div>
+          </article>
+          <article class="finding">
+            <header>
+              <span class="badge badge-sev-low">low</span>
+              <h3 class="finding-title">No Assumptions Index</h3>
+              <span class="finding-location">general</span>
+            </header>
+            <div class="finding-note">Not required at this stake level, but would save rework if this PRD feeds story creation.</div>
+            <div class="finding-fix"><strong>Fix:</strong> Optional. Flag if escalating to architecture.</div>
+          </article>
+        </div>
+      </details>
+    </section>
+
+    <!-- Downstream usability -->
+    <section class="dimension">
+      <details>
+        <summary>
+          <h2>Downstream usability</h2>
+          <span class="verdict-pill verdict-adequate">adequate</span>
+        </summary>
+        <div class="dim-body">
+          <div class="dim-judgment">
+            <p>Glossary (§4) is present and concise. Domain nouns are consistent across FRs and UJs. FR-1 through FR-46 are contiguous. UJ-1 through UJ-4 are contiguous. §8.2 table schema is actionable enough for a developer to start from. One non-resolving reference: Analytics (§7) has no backing FR section.</p>
+          </div>
+        </div>
+        <div class="findings-list">
+          <article class="finding">
+            <header>
+              <span class="badge badge-sev-low">low</span>
+              <h3 class="finding-title">UJ protagonists unnamed</h3>
+              <span class="finding-location">§2.2</span>
+            </header>
+            <div class="finding-note">All four UJs use "the owner" — no named protagonist.</div>
+            <div class="finding-fix"><strong>Fix:</strong> Give the operator a name inline (e.g. "Karim, the sole operator, opens the dashboard…") to lock protagonist context.</div>
+          </article>
+          <article class="finding">
+            <header>
+              <span class="badge badge-sev-low">low</span>
+              <h3 class="finding-title">Analytics nav entry has no backing FRs</h3>
+              <span class="finding-location">§7</span>
+            </header>
+            <div class="finding-note">One unresolved nav reference. All other nav items map to FR sections.</div>
+            <div class="finding-fix"><strong>Fix:</strong> See Strategic Coherence finding.</div>
+          </article>
+        </div>
+      </details>
+    </section>
+
+    <!-- Shape fit -->
+    <section class="dimension">
+      <details>
+        <summary>
+          <h2>Shape fit</h2>
+          <span class="verdict-pill verdict-strong">strong</span>
+        </summary>
+        <div class="dim-body">
+          <div class="dim-judgment">
+            <p>Correctly shaped for a hobby/single-operator tool. Four UJs at the right density — workflow, not psychology. No standalone persona section. No NFR boilerplate section. Rigor calibrated to stakes. §8.1 explicitly removes multi-user structure at the data model level — a rare and valuable downstream-safety move.</p>
+            <p>One tension: <code>status: final</code> is declared while FR-12 and FR-23 lack implementation specs a developer needs to start.</p>
+          </div>
+        </div>
+        <div class="findings-list">
+          <article class="finding">
+            <header>
+              <span class="badge badge-sev-medium">medium</span>
+              <h3 class="finding-title">status: final declared before done-ness gaps are closed</h3>
+              <span class="finding-location">frontmatter</span>
+            </header>
+            <div class="finding-note">"Final" signals locked and approved, but FR-12 and FR-23 still need a spec before a developer can build them.</div>
+            <div class="finding-fix"><strong>Fix:</strong> Resolve the two high done-ness findings, or change to <code>status: ready-for-dev</code> and list the FRs pending spec.</div>
+          </article>
+        </div>
+      </details>
+    </section>
+
+    <div class="mechanical">
+      <h3>Mechanical notes</h3>
+      <ul>
+        <li><strong>Glossary drift:</strong> None found. "Delivered order" / "Delivered Orders" capitalization is consistent throughout.</li>
+        <li><strong>ID continuity:</strong> FR-1–FR-46 contiguous, no gaps or duplicates. UJ-1–UJ-4 contiguous.</li>
+        <li><strong>Assumptions Index:</strong> Not present. No [ASSUMPTION] tags inline. Not required at hobby/solo stake level.</li>
+        <li><strong>UJ protagonist naming:</strong> All four UJs use "the owner" — no named protagonist carrying context inline.</li>
+        <li><strong>Cross-references:</strong> Analytics nav entry (§7) has no backing FR section — one unresolved reference. All other nav items map to FR sections.</li>
+        <li><strong>Division-by-zero spec:</strong> §6 calls this out explicitly. Good practice.</li>
+      </ul>
+    </div>
+
+    <footer class="report-footer">
+      <div class="meta">
+        <span>PRD: COD E-commerce Growth OS — Product Requirements Document.md</span>
+        <span>Rubric: .agent/skills/bmad-prd/assets/prd-validation-checklist.md</span>
+        <span>Generated: 2026-08-18T23:09:00+01:00</span>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>
