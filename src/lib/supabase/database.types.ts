@@ -218,6 +218,60 @@ export interface Database {
         };
         Update: Partial<Database["public"]["Tables"]["creative_assets"]["Row"]>;
       };
+      ad_campaigns: {
+        Row: {
+          id: string;
+          name: string;
+          platform: "META_ADS" | "TIKTOK_ADS" | "SNAPCHAT_ADS" | "GOOGLE_ADS";
+          objective: "TESTING" | "SCALING" | "RETARGETING" | "WARMUP";
+          daily_budget: number;
+          status: "ACTIVE" | "PAUSED" | "ARCHIVED";
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Omit<Database["public"]["Tables"]["ad_campaigns"]["Row"], "id" | "created_at" | "updated_at"> & {
+          id?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["ad_campaigns"]["Row"]>;
+      };
+      ad_sets: {
+        Row: {
+          id: string;
+          campaign_id: string;
+          name: string;
+          audience_targeting: string;
+          daily_budget: number | null;
+          status: "ACTIVE" | "PAUSED" | "ARCHIVED";
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Omit<Database["public"]["Tables"]["ad_sets"]["Row"], "id" | "created_at" | "updated_at"> & {
+          id?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["ad_sets"]["Row"]>;
+      };
+      ads: {
+        Row: {
+          id: string;
+          ad_set_id: string;
+          name: string;
+          product_id: string;
+          creative_id: string;
+          status: "ACTIVE" | "PAUSED" | "ARCHIVED";
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Omit<Database["public"]["Tables"]["ads"]["Row"], "id" | "created_at" | "updated_at"> & {
+          id?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["ads"]["Row"]>;
+      };
       orders: {
         Row: {
           id: string;
