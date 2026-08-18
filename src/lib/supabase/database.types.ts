@@ -192,6 +192,32 @@ export interface Database {
         };
         Update: Partial<Database["public"]["Tables"]["marketing_hooks"]["Row"]>;
       };
+      creative_assets: {
+        Row: {
+          id: string;
+          code: string;
+          product_id: string;
+          angle_id: string | null;
+          hook_id: string | null;
+          asset_type: "VIDEO" | "IMAGE" | "CAROUSEL";
+          aspect_ratio: "9:16" | "1:1" | "4:5" | "16:9";
+          creator_source: string;
+          media_url: string | null;
+          thumbnail_url: string | null;
+          primary_hook_text: string | null;
+          lifecycle_status: "TESTING" | "ACTIVE" | "FATIGUED" | "PAUSED" | "ARCHIVED";
+          performance_tag: "WINNER" | "KEEP" | "ITERATE" | "KILL";
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Omit<Database["public"]["Tables"]["creative_assets"]["Row"], "id" | "created_at" | "updated_at"> & {
+          id?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["creative_assets"]["Row"]>;
+      };
       orders: {
         Row: {
           id: string;

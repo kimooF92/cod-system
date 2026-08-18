@@ -1,12 +1,16 @@
 import { getMarketingAngles } from "@/actions/creatives";
-import { AngleRegistry } from "@/components/creatives/angle-registry";
+import { getCreativeAssets } from "@/actions/creative-assets";
+import { CreativeHub } from "@/components/creatives/creative-hub";
 
 export const metadata = {
-  title: "Marketing Angles & Hooks — COD Growth OS",
+  title: "Marketing Creatives & Asset Library — COD Growth OS",
 };
 
 export default async function CreativesPage() {
-  const initialAngles = await getMarketingAngles("ALL");
+  const [initialAngles, initialAssets] = await Promise.all([
+    getMarketingAngles("ALL"),
+    getCreativeAssets(),
+  ]);
 
-  return <AngleRegistry initialAngles={initialAngles} />;
+  return <CreativeHub initialAngles={initialAngles} initialAssets={initialAssets} />;
 }
