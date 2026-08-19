@@ -44,12 +44,12 @@ development_status:
   1-6-multi-dimensional-0-100-product-scoring-engine: done
   epic-1-retrospective: optional
 
-  epic-2: in-progress
+  epic-2: done
   2-1-marketing-angles-hooks-formats-registry: done
   2-2-creative-asset-library-lifecycle-management: done
   2-3-campaign-ad-structure-mapping: done
   2-4-ad-performance-tracking-meta-ads-csv-import: done
-  2-5-automated-creative-recommendation-engine: backlog
+  2-5-automated-creative-recommendation-engine: done
   epic-2-retrospective: optional
 
   epic-3: backlog

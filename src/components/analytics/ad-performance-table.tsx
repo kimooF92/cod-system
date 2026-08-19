@@ -21,6 +21,7 @@ import {
 import { getProducts, type Product } from "@/actions/products";
 import { AdPerformanceManualDialog } from "./ad-performance-manual-dialog";
 import { MetaCsvImportDialog } from "./meta-csv-import-dialog";
+import { CreativeRecommendationsBanner } from "./creative-recommendations-banner";
 import { aggregateAdPerformance } from "@/lib/engine/ad-metrics";
 
 interface AdPerformanceTableProps {
@@ -138,6 +139,9 @@ export function AdPerformanceTable({ initialRecords }: AdPerformanceTableProps) 
           </p>
         </div>
       </div>
+
+      {/* Recommendations Banner */}
+      <CreativeRecommendationsBanner records={records} />
 
       {/* Product Filter Bar */}
       <div className="flex items-center gap-1 overflow-x-auto text-xs py-1 border-b border-border pb-3">
