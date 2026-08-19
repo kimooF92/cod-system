@@ -86,3 +86,45 @@ export const orderInputSchema = z.object({
 });
 
 export type OrderInput = z.infer<typeof orderInputSchema>;
+
+export const COURIER_PRESETS = [
+  "Aramex Tunisia",
+  "First Delivery Express",
+  "Maystro Delivery",
+  "Quick Express",
+  "Colis Express",
+  "Other",
+] as const;
+
+export type CourierPreset = (typeof COURIER_PRESETS)[number];
+
+export const RETURN_REASONS = [
+  "Customer Refused on Delivery",
+  "Unreachable / Wrong Phone",
+  "Wrong Address / Incomplete",
+  "Wrong Item Shipped",
+  "Late Delivery / Cancelled by Customer",
+  "Damaged in Transit",
+  "Other",
+] as const;
+
+export type ReturnReason = (typeof RETURN_REASONS)[number];
+
+export const reconcileOrderSchema = z.object({
+  status: z.enum(["DISPATCHED", "DELIVERED", "RETURNED", "CANCELLED"]),
+  courier_name: z.string().optional().nullable(),
+  tracking_code: z.string().optional().nullable(),
+  return_reason: z.string().optional().nullable(),
+  return_fee: z.coerce.number().min(0, "Return fee cannot be negative").default(3.5),
+  notes: z.string().optional().nullable(),
+});
+
+export type ReconcileOrderInput = z.infer<typeof reconcileOrderSchema>;
+
+export const batchDispatchSchema = z.object({
+  order_ids: z.array(z.string()).min(1, "At least one order must be selected"),
+  courier_name: z.string().min(1, "Courier name is required"),
+  notes: z.string().optional().nullable(),
+});
+
+export type BatchDispatchInput = z.infer<typeof batchDispatchSchema>;

@@ -40,6 +40,8 @@ import { isFollowUpDue } from "@/lib/engine/followup-rules";
 import { OrderFormDialog } from "./order-form-dialog";
 import { WhatsAppDialog } from "./whatsapp-dialog";
 import { CallAttemptDialog } from "./call-attempt-dialog";
+import { CourierReconciliationDialog } from "./courier-reconciliation-dialog";
+import { BatchDispatchDialog } from "./batch-dispatch-dialog";
 import { FollowUpQueueBanner } from "./followup-queue-banner";
 
 interface OrderTriageTableProps {
@@ -107,6 +109,8 @@ export function OrderTriageTable({ initialOrders }: OrderTriageTableProps) {
   const [isOrderDialogOpen, setIsOrderDialogOpen] = React.useState(false);
   const [whatsAppOrder, setWhatsAppOrder] = React.useState<Order | null>(null);
   const [callAttemptOrder, setCallAttemptOrder] = React.useState<Order | null>(null);
+  const [reconciliationOrder, setReconciliationOrder] = React.useState<Order | null>(null);
+  const [isBatchDispatchOpen, setIsBatchDispatchOpen] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
 
   React.useEffect(() => {
@@ -269,6 +273,15 @@ export function OrderTriageTable({ initialOrders }: OrderTriageTableProps) {
 
           <div className="flex items-center gap-2 flex-wrap">
             <button
+              onClick={() => setIsBatchDispatchOpen(true)}
+              className="flex items-center gap-1 px-3 py-1 rounded bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold transition-colors shadow-sm"
+              title="Bulk assign courier and dispatch"
+            >
+              <Truck className="w-3.5 h-3.5" />
+              <span>Batch Courier Dispatch</span>
+            </button>
+
+            <button
               onClick={() => handleBatchUpdate("CONFIRMED")}
               className="flex items-center gap-1 px-3 py-1 rounded bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium transition-colors"
             >
@@ -278,7 +291,7 @@ export function OrderTriageTable({ initialOrders }: OrderTriageTableProps) {
 
             <button
               onClick={() => handleBatchUpdate("DISPATCHED")}
-              className="flex items-center gap-1 px-3 py-1 rounded bg-amber-600 hover:bg-amber-700 text-white text-xs font-medium transition-colors"
+              className="flex items-center gap-1 px-3 py-1 rounded bg-amber-600/80 hover:bg-amber-700 text-white text-xs font-medium transition-colors"
             >
               <Truck className="w-3.5 h-3.5" />
               <span>Mark Dispatched</span>
@@ -512,16 +525,35 @@ export function OrderTriageTable({ initialOrders }: OrderTriageTableProps) {
                       </td>
 
                       <td className="py-3 px-3 text-center whitespace-nowrap">
-                        <span
-                          className={`px-2 py-0.5 rounded text-[10px] font-mono font-semibold border ${style.bg} ${style.text} ${style.border}`}
-                        >
-                          {style.label}
-                        </span>
-                        {isDue && (
-                          <span className="block text-[9px] font-mono text-red-400 font-bold mt-0.5 animate-pulse">
-                            CALL DUE NOW
+                        <div className="flex flex-col items-center gap-1">
+                          <span
+                            className={`px-2 py-0.5 rounded text-[10px] font-mono font-semibold border ${style.bg} ${style.text} ${style.border}`}
+                          >
+                            {style.label}
                           </span>
-                        )}
+
+                          {order.courier_name && (
+                            <span className="text-[9px] font-mono text-muted-foreground flex items-center gap-1 bg-surface-subtle px-1.5 py-0.5 rounded border border-border">
+                              <Truck className="w-2.5 h-2.5 text-amber-400" />
+                              <span>{order.courier_name}</span>
+                              {order.tracking_code && (
+                                <span className="text-foreground font-semibold">({order.tracking_code})</span>
+                              )}
+                            </span>
+                          )}
+
+                          {order.status === "RETURNED" && order.return_reason && (
+                            <span className="text-[9px] font-mono text-red-400 max-w-[140px] truncate" title={order.return_reason}>
+                              {order.return_reason} (-{formatCurrency(Number(order.return_fee || 3.5))})
+                            </span>
+                          )}
+
+                          {isDue && (
+                            <span className="block text-[9px] font-mono text-red-400 font-bold animate-pulse">
+                              CALL DUE NOW
+                            </span>
+                          )}
+                        </div>
                       </td>
 
                       {/* Inline Quick Action Buttons */}
@@ -567,11 +599,12 @@ export function OrderTriageTable({ initialOrders }: OrderTriageTableProps) {
                           ) : order.status === "CONFIRMED" ? (
                             <>
                               <button
-                                onClick={() => handleStatusChange(order.id, "DISPATCHED")}
-                                className="px-2 py-0.5 rounded bg-amber-500/15 hover:bg-amber-500/25 text-amber-400 border border-amber-500/30 text-[10px] font-semibold transition-colors"
-                                title="Hand to Courier"
+                                onClick={() => setReconciliationOrder(order)}
+                                className="px-2 py-0.5 rounded bg-amber-500/15 hover:bg-amber-500/25 text-amber-400 border border-amber-500/30 text-[10px] font-semibold transition-colors flex items-center gap-1"
+                                title="Assign Courier and Dispatch"
                               >
-                                Dispatch
+                                <Truck className="w-3 h-3" />
+                                <span>Dispatch</span>
                               </button>
                               <button
                                 onClick={() => handleStatusChange(order.id, "CANCELLED")}
@@ -584,21 +617,36 @@ export function OrderTriageTable({ initialOrders }: OrderTriageTableProps) {
                             <>
                               <button
                                 onClick={() => handleStatusChange(order.id, "DELIVERED")}
-                                className="px-2 py-0.5 rounded bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 text-[10px] font-semibold transition-colors"
-                                title="Collected Cash"
+                                className="px-2 py-0.5 rounded bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 text-[10px] font-semibold transition-colors flex items-center gap-0.5"
+                                title="Mark Delivered & Paid"
                               >
-                                Delivered
+                                <Check className="w-2.5 h-2.5" />
+                                <span>Delivered</span>
                               </button>
                               <button
-                                onClick={() => handleStatusChange(order.id, "RETURNED")}
-                                className="px-1.5 py-0.5 rounded bg-red-500/15 hover:bg-red-500/25 text-red-400 border border-red-500/30 text-[10px] transition-colors"
-                                title="Returned / Failed Delivery"
+                                onClick={() => setReconciliationOrder(order)}
+                                className="px-1.5 py-0.5 rounded bg-red-500/15 hover:bg-red-500/25 text-red-400 border border-red-500/30 text-[10px] transition-colors flex items-center gap-0.5"
+                                title="Log Return with Reason and Return Fee"
                               >
-                                Return
+                                <RotateCcw className="w-2.5 h-2.5" />
+                                <span>Return</span>
+                              </button>
+                              <button
+                                onClick={() => setReconciliationOrder(order)}
+                                className="px-1.5 py-0.5 rounded bg-surface-subtle hover:bg-surface text-muted-foreground border border-border text-[10px]"
+                                title="Edit Courier / Manifest Details"
+                              >
+                                Edit
                               </button>
                             </>
                           ) : (
-                            <span className="text-[10px] text-muted-foreground">Closed</span>
+                            <button
+                              onClick={() => setReconciliationOrder(order)}
+                              className="px-2 py-0.5 rounded bg-surface-subtle hover:bg-surface text-muted-foreground border border-border text-[10px] transition-colors"
+                              title="Reconcile / Edit Details"
+                            >
+                              Reconcile
+                            </button>
                           )}
                         </div>
                       </td>
@@ -641,6 +689,25 @@ export function OrderTriageTable({ initialOrders }: OrderTriageTableProps) {
         isOpen={!!callAttemptOrder}
         onClose={() => setCallAttemptOrder(null)}
         onSuccess={() => fetchOrders(selectedProductId, selectedGov, selectedStatus)}
+      />
+
+      {/* Courier Reconciliation Dialog (Story 3.4) */}
+      <CourierReconciliationDialog
+        order={reconciliationOrder}
+        isOpen={!!reconciliationOrder}
+        onClose={() => setReconciliationOrder(null)}
+        onSuccess={() => fetchOrders(selectedProductId, selectedGov, selectedStatus)}
+      />
+
+      {/* Batch Dispatch Dialog (Story 3.4) */}
+      <BatchDispatchDialog
+        selectedOrders={orders.filter((o) => selectedIds.includes(o.id))}
+        isOpen={isBatchDispatchOpen}
+        onClose={() => setIsBatchDispatchOpen(false)}
+        onSuccess={() => {
+          setSelectedIds([]);
+          fetchOrders(selectedProductId, selectedGov, selectedStatus);
+        }}
       />
     </div>
   );

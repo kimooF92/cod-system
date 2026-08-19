@@ -7,6 +7,10 @@ import {
   sanitizeTunisianPhone,
   type OrderInput,
   type OrderStatus,
+  reconcileOrderSchema,
+  type ReconcileOrderInput,
+  batchDispatchSchema,
+  type BatchDispatchInput,
 } from "@/lib/validations/order";
 import type { Database } from "@/lib/supabase/database.types";
 import { getProducts, type Product } from "./products";
@@ -448,3 +452,114 @@ export async function deleteOrder(
   revalidatePath("/orders");
   return { success: true };
 }
+
+/**
+ * Reconciles an order's courier assignment, delivery outcome, or return details (FR-27, FR-28)
+ */
+export async function reconcileCourierDelivery(
+  id: string,
+  rawInput: ReconcileOrderInput
+): Promise<{ success: boolean; data?: Database["public"]["Tables"]["orders"]["Row"]; error?: string }> {
+  const parsed = reconcileOrderSchema.safeParse(rawInput);
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: parsed.error.errors[0]?.message || "Invalid reconciliation payload",
+    };
+  }
+
+  const { status, courier_name, tracking_code, return_reason, return_fee, notes } = parsed.data;
+  const now = new Date().toISOString();
+
+  const updates: Partial<Database["public"]["Tables"]["orders"]["Row"]> = {
+    status,
+    updated_at: now,
+  };
+
+  if (courier_name !== undefined) updates.courier_name = courier_name;
+  if (tracking_code !== undefined) updates.tracking_code = tracking_code;
+  if (notes !== undefined && notes !== null) updates.notes = notes;
+
+  if (status === "RETURNED") {
+    updates.return_reason = return_reason || "Customer Refused on Delivery";
+    updates.return_fee = return_fee ?? 3.5;
+  } else if (status === "CANCELLED") {
+    updates.return_reason = return_reason || "Cancelled by Operator";
+  }
+
+  try {
+    const supabase = await createServerSupabaseClient();
+    await (supabase.from("orders") as any)
+      .update(updates)
+      .eq("id", id);
+  } catch {
+    // ignore
+  }
+
+  let updatedOrder: Database["public"]["Tables"]["orders"]["Row"] | undefined;
+  memoryOrders = memoryOrders.map((o) => {
+    if (o.id === id) {
+      updatedOrder = {
+        ...o,
+        ...updates,
+      };
+      return updatedOrder;
+    }
+    return o;
+  });
+
+  revalidatePath("/orders");
+  revalidatePath("/");
+  return { success: true, data: updatedOrder };
+}
+
+/**
+ * Batch dispatches confirmed orders to a designated courier
+ */
+export async function batchDispatchOrders(
+  rawInput: BatchDispatchInput
+): Promise<{ success: boolean; dispatchedCount: number; error?: string }> {
+  const parsed = batchDispatchSchema.safeParse(rawInput);
+  if (!parsed.success) {
+    return {
+      success: false,
+      dispatchedCount: 0,
+      error: parsed.error.errors[0]?.message || "Invalid batch dispatch input",
+    };
+  }
+
+  const { order_ids, courier_name, notes } = parsed.data;
+  const now = new Date().toISOString();
+
+  try {
+    const supabase = await createServerSupabaseClient();
+    await (supabase.from("orders") as any)
+      .update({
+        status: "DISPATCHED",
+        courier_name,
+        notes: notes || undefined,
+        updated_at: now,
+      })
+      .in("id", order_ids);
+  } catch {
+    // ignore
+  }
+
+  memoryOrders = memoryOrders.map((o) => {
+    if (order_ids.includes(o.id)) {
+      return {
+        ...o,
+        status: "DISPATCHED" as OrderStatus,
+        courier_name,
+        notes: notes !== undefined && notes !== null ? notes : o.notes,
+        updated_at: now,
+      };
+    }
+    return o;
+  });
+
+  revalidatePath("/orders");
+  revalidatePath("/");
+  return { success: true, dispatchedCount: order_ids.length };
+}
+
