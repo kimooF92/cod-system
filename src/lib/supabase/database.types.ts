@@ -19,10 +19,12 @@ export type ProductStatus =
   | "ARCHIVED";
 
 export type OrderStatus =
+  | "NEW_ORDER"
   | "NEW"
   | "CONTACTING"
   | "CONFIRMED"
   | "PREPARING"
+  | "DISPATCHED"
   | "SHIPPED"
   | "DELIVERED"
   | "CANCELLED"
