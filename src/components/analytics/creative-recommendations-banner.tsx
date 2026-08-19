@@ -22,7 +22,7 @@ export function CreativeRecommendationsBanner({
   const seen = new Set<string>();
   for (const r of records) {
     const key = r.creative_id || r.product_id;
-    if (seen.has(key)) continue;
+    if (!key || seen.has(key)) continue;
     seen.add(key);
 
     const targetCpl = r.product?.target_cpl || 5.0;
