@@ -43,6 +43,7 @@ import { CallAttemptDialog } from "./call-attempt-dialog";
 import { CourierReconciliationDialog } from "./courier-reconciliation-dialog";
 import { BatchDispatchDialog } from "./batch-dispatch-dialog";
 import { FollowUpQueueBanner } from "./followup-queue-banner";
+import { OperationalRatesBar } from "./operational-rates-bar";
 
 interface OrderTriageTableProps {
   initialOrders: Order[];
@@ -213,6 +214,9 @@ export function OrderTriageTable({ initialOrders }: OrderTriageTableProps) {
           <span>New COD Order</span>
         </button>
       </div>
+
+      {/* Live Operational Rates & Fulfillment Cockpit (Story 3.5) */}
+      <OperationalRatesBar orders={orders} products={products} />
 
       {/* Follow-Up & Max Attempts Action Banner */}
       <FollowUpQueueBanner
