@@ -55,6 +55,26 @@ export function SheetsSyncDialog({
   const [productCol, setProductCol] = React.useState("");
   const [qtyCol, setQtyCol] = React.useState("");
   const [priceCol, setPriceCol] = React.useState("");
+  const [mappingRestored, setMappingRestored] = React.useState(false);
+
+  // Restore saved column mapping from localStorage on open
+  React.useEffect(() => {
+    if (!isOpen) return;
+    try {
+      const saved = localStorage.getItem("cod-sheets-mapping");
+      if (saved) {
+        const m = JSON.parse(saved);
+        if (m.nameCol) setNameCol(m.nameCol);
+        if (m.phoneCol) setPhoneCol(m.phoneCol);
+        if (m.govCol) setGovCol(m.govCol);
+        if (m.addressCol) setAddressCol(m.addressCol);
+        if (m.productCol) setProductCol(m.productCol);
+        if (m.qtyCol) setQtyCol(m.qtyCol);
+        if (m.priceCol) setPriceCol(m.priceCol);
+        setMappingRestored(true);
+      }
+    } catch {}
+  }, [isOpen]);
 
   const [syncPreview, setSyncPreview] = React.useState<SyncResult | null>(null);
   const [loading, setLoading] = React.useState(false);
@@ -163,6 +183,13 @@ Yassine Ben Amor\t22345678\tTunis\tCentre Ville\t1\t49.000`;
       if (!res.success) {
         setError(res.error || "Failed to import synced orders");
       } else {
+        // Save column mapping to localStorage for next time
+        try {
+          localStorage.setItem(
+            "cod-sheets-mapping",
+            JSON.stringify({ nameCol, phoneCol, govCol, addressCol, productCol, qtyCol, priceCol })
+          );
+        } catch {}
         onSuccess();
         onClose();
       }

@@ -2,10 +2,14 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
+import { useQuickCreate } from "./quick-create-provider";
+import { KeyboardHelpModal } from "./keyboard-help-modal";
 
 export function KeyboardShortcutsListener() {
   const router = useRouter();
+  const { openCreate } = useQuickCreate();
   const [gPressed, setGPressed] = React.useState(false);
+  const [helpOpen, setHelpOpen] = React.useState(false);
 
   React.useEffect(() => {
     let timeout: NodeJS.Timeout;
@@ -23,6 +27,28 @@ export function KeyboardShortcutsListener() {
 
       if (e.key === "Escape") {
         setGPressed(false);
+        setHelpOpen(false);
+        return;
+      }
+
+      // ? = open keyboard help
+      if (e.key === "?" && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        setHelpOpen((v) => !v);
+        return;
+      }
+
+      // c = open quick create menu (standalone, no g prefix)
+      if (e.key === "c" && !e.ctrlKey && !e.metaKey && !e.altKey && !gPressed) {
+        e.preventDefault();
+        // Dispatch a synthetic click on the Create button
+        const btn = document.querySelector<HTMLButtonElement>("[data-quick-create-trigger]");
+        if (btn) {
+          btn.click();
+        } else {
+          // Fallback: open order form directly
+          openCreate("order");
+        }
         return;
       }
 
@@ -96,7 +122,9 @@ export function KeyboardShortcutsListener() {
       window.removeEventListener("keydown", handleKeyDown);
       clearTimeout(timeout);
     };
-  }, [gPressed, router]);
+  }, [gPressed, router, openCreate]);
 
-  return null;
+  return (
+    <KeyboardHelpModal isOpen={helpOpen} onClose={() => setHelpOpen(false)} />
+  );
 }

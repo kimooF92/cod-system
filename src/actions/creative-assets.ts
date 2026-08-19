@@ -76,6 +76,36 @@ let memoryAssets: Database["public"]["Tables"]["creative_assets"]["Row"][] = [
 ];
 
 /**
+ * Returns the next sequential creative asset code (e.g. CR-004)
+ */
+export async function getNextCreativeCode(): Promise<string> {
+  let codes: string[] = [];
+
+  try {
+    const supabase = await createServerSupabaseClient();
+    const { data } = await (supabase.from("creative_assets") as any).select("code");
+    if (data && data.length > 0) {
+      codes = data.map((r: any) => r.code as string);
+    } else {
+      codes = memoryAssets.map((a) => a.code);
+    }
+  } catch {
+    codes = memoryAssets.map((a) => a.code);
+  }
+
+  // Extract numeric suffixes from codes like "CR-001"
+  const nums = codes
+    .map((c) => {
+      const match = c.match(/CR-(\d+)/i);
+      return match ? parseInt(match[1], 10) : 0;
+    })
+    .filter((n) => !isNaN(n));
+
+  const next = nums.length > 0 ? Math.max(...nums) + 1 : 1;
+  return `CR-${String(next).padStart(3, "0")}`;
+}
+
+/**
  * Retrieves all creative assets with populated product & angle metadata
  */
 export async function getCreativeAssets(filters?: {

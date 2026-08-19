@@ -136,15 +136,15 @@ export function ResearchFormDialog({
               <label className="text-xs font-medium text-muted-foreground">
                 Core Problem
               </label>
-              <input
-                type="text"
-                placeholder="What is broken or annoying?"
+              <textarea
+                rows={2}
+                placeholder="What is broken or annoying for the customer?"
                 value={formData.problem}
                 onChange={(e) =>
                   setFormData({ ...formData, problem: e.target.value })
                 }
                 required
-                className="w-full px-3 py-2 bg-surface-subtle border border-border rounded-md text-xs text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-3 py-2 bg-surface-subtle border border-border rounded-md text-xs text-foreground focus:outline-none focus:border-blue-500 resize-none"
               />
             </div>
 
@@ -152,15 +152,15 @@ export function ResearchFormDialog({
               <label className="text-xs font-medium text-muted-foreground">
                 Specific Pain Point (Emotional Trigger)
               </label>
-              <input
-                type="text"
-                placeholder="e.g. Lower back stiffness by 3 PM"
+              <textarea
+                rows={2}
+                placeholder="e.g. Lower back stiffness by 3 PM every workday"
                 value={formData.pain_point}
                 onChange={(e) =>
                   setFormData({ ...formData, pain_point: e.target.value })
                 }
                 required
-                className="w-full px-3 py-2 bg-surface-subtle border border-border rounded-md text-xs text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-3 py-2 bg-surface-subtle border border-border rounded-md text-xs text-foreground focus:outline-none focus:border-blue-500 resize-none"
               />
             </div>
           </div>
@@ -170,15 +170,15 @@ export function ResearchFormDialog({
             <label className="text-xs font-medium text-muted-foreground">
               Product Promise / Solution Statement
             </label>
-            <input
-              type="text"
-              placeholder="e.g. Ergonomic honeycomb memory grid for all-day comfort"
+            <textarea
+              rows={2}
+              placeholder="e.g. Ergonomic honeycomb memory grid eliminates lumbar pressure for all-day comfort"
               value={formData.promise}
               onChange={(e) =>
                 setFormData({ ...formData, promise: e.target.value })
               }
               required
-              className="w-full px-3 py-2 bg-surface-subtle border border-border rounded-md text-xs text-foreground focus:outline-none focus:border-blue-500"
+              className="w-full px-3 py-2 bg-surface-subtle border border-border rounded-md text-xs text-foreground focus:outline-none focus:border-blue-500 resize-none"
             />
           </div>
 
