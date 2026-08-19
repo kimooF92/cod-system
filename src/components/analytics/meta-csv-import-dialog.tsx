@@ -90,7 +90,7 @@ export function MetaCsvImportDialog({
             </div>
             <div>
               <h3 className="text-sm font-bold text-foreground">
-                Import Meta Ads Export CSV (FR-21)
+                Import Meta Ads Export CSV
               </h3>
               <p className="text-xs text-muted-foreground">
                 Auto-detects spend, impressions, link clicks &amp; leads columns

@@ -124,7 +124,7 @@ export function OrderTable({ initialOrders }: OrderTableProps) {
             COD Order Management &amp; Triage
           </h2>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Rapid manual intake, Tunisian phone validation &amp; delivery tracking (FR-23, FR-24)
+            Rapid manual intake, Tunisian phone validation &amp; delivery tracking
           </p>
         </div>
 

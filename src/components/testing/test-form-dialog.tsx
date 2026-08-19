@@ -93,7 +93,7 @@ export function TestFormDialog({
             </div>
             <div>
               <h3 className="text-sm font-bold text-foreground">
-                Launch Bounded Product Test (FR-9)
+                Launch Bounded Product Test
               </h3>
               <p className="text-xs text-muted-foreground">
                 Define strict budget cap and benchmark targets to test market demand

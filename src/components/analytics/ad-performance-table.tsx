@@ -74,7 +74,7 @@ export function AdPerformanceTable({ initialRecords }: AdPerformanceTableProps) 
             Ad Spend &amp; Performance Tracking
           </h2>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Daily logs, Meta Ads CSV batch import &amp; pure unit ratios (CTR, CPC, CPL) (FR-19, FR-20, FR-21)
+            Daily logs, Meta Ads CSV batch import &amp; pure unit ratios (CTR, CPC, CPL)
           </p>
         </div>
 

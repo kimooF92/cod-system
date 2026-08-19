@@ -114,7 +114,7 @@ export function OrderFormDialog({
             </div>
             <div>
               <h3 className="text-sm font-bold text-foreground">
-                Manual COD Order Intake (FR-23, FR-24)
+                Manual COD Order Intake
               </h3>
               <p className="text-xs text-muted-foreground">
                 Fast order entry with Tunisian phone validation &amp; 24 governorates

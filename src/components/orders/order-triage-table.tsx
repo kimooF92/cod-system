@@ -205,7 +205,7 @@ export function OrderTriageTable({ initialOrders }: OrderTriageTableProps) {
             COD Order Management &amp; Triage Cockpit
           </h2>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Follow-up scheduling, 1-click WhatsApp &amp; 3-attempt strike rules (FR-25, FR-26, FR-27, FR-28)
+            Follow-up scheduling, 1-click WhatsApp &amp; 3-attempt strike rules
           </p>
         </div>
 

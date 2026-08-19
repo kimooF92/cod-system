@@ -62,7 +62,7 @@ export function CampaignFormDialog({
             </div>
             <div>
               <h3 className="text-sm font-bold text-foreground">
-                Create Ad Campaign (FR-18)
+                Create Ad Campaign
               </h3>
               <p className="text-xs text-muted-foreground">
                 Set campaign structure, platform &amp; daily budget cap

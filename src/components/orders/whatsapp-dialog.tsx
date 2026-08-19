@@ -57,7 +57,7 @@ export function WhatsAppDialog({ order, isOpen, onClose }: WhatsAppDialogProps) 
             </div>
             <div>
               <h3 className="text-sm font-bold text-foreground">
-                1-Click WhatsApp Action (FR-26)
+                1-Click WhatsApp Action
               </h3>
               <p className="text-xs text-muted-foreground">
                 {order.customer_name} &bull; {order.phone} ({order.governorate})

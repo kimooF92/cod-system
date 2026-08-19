@@ -104,7 +104,7 @@ export function CreativeAssetDialog({
             </div>
             <div>
               <h3 className="text-sm font-bold text-foreground">
-                Register Creative Asset (FR-16)
+                Register Creative Asset
               </h3>
               <p className="text-xs text-muted-foreground">
                 Track creative code, aspect ratio, creator source &amp; linked hook

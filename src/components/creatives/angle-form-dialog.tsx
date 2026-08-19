@@ -76,7 +76,7 @@ export function AngleFormDialog({
             </div>
             <div>
               <h3 className="text-sm font-bold text-foreground">
-                Register Marketing Angle (FR-13)
+                Register Marketing Angle
               </h3>
               <p className="text-xs text-muted-foreground">
                 Link core pain points, promises, and customer avatars to a product
@@ -187,7 +187,7 @@ export function AngleFormDialog({
           {/* Creative Format */}
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-muted-foreground">
-              Primary Creative Format (FR-15)
+              Primary Creative Format
             </label>
             <select
               value={formData.creative_format}

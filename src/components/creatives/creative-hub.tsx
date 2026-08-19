@@ -41,7 +41,7 @@ export function CreativeHub({
           }`}
         >
           <Sparkles className="w-3.5 h-3.5" />
-          <span>Angles &amp; Hooks Registry (FR-13, FR-14)</span>
+          <span>Angles &amp; Hooks Registry</span>
           <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-surface-subtle border border-border">
             {initialAngles.length}
           </span>
@@ -56,7 +56,7 @@ export function CreativeHub({
           }`}
         >
           <Video className="w-3.5 h-3.5" />
-          <span>Creative Asset Library (FR-16, FR-17)</span>
+          <span>Creative Asset Library</span>
           <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-surface-subtle border border-border">
             {initialAssets.length}
           </span>
@@ -71,7 +71,7 @@ export function CreativeHub({
           }`}
         >
           <Layers className="w-3.5 h-3.5" />
-          <span>Campaign Structure (FR-18)</span>
+          <span>Campaign Structure</span>
           <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-surface-subtle border border-border">
             {campaigns.length}
           </span>

@@ -47,7 +47,7 @@ export function FollowUpQueueBanner({
           </div>
           <div>
             <h4 className="text-xs font-bold text-foreground">
-              Follow-Up &amp; Retry Cockpit (FR-27, FR-28)
+              Follow-Up &amp; Retry Cockpit
             </h4>
             <p className="text-[11px] text-muted-foreground">
               {dueOrders.length} callback{dueOrders.length !== 1 ? "s" : ""} scheduled for retry now &bull; {maxAttemptOrders.length} reached 3/3 attempt limit

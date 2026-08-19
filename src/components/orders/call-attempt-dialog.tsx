@@ -52,7 +52,7 @@ export function CallAttemptDialog({
             </div>
             <div>
               <h3 className="text-sm font-bold text-foreground">
-                Log Call Attempt #{nextAttemptNumber} (FR-27)
+                Log Call Attempt #{nextAttemptNumber}
               </h3>
               <p className="text-xs text-muted-foreground truncate max-w-[240px]">
                 {order.customer_name} &bull; {order.phone}

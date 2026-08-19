@@ -292,7 +292,7 @@ export function ProductTable({ initialProducts }: ProductTableProps) {
                           className={`px-2.5 py-1 rounded-full border text-[10px] font-mono tracking-wide flex items-center gap-1 hover:brightness-125 transition-all ${
                             statusStyles[product.status] || statusStyles.READY
                           }`}
-                          title="Click to override status with reason (FR-11)"
+                          title="Click to override status with reason"
                         >
                           <span>{product.status}</span>
                           <ChevronRight className="w-3 h-3 opacity-60" />

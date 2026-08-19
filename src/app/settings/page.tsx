@@ -21,7 +21,7 @@ export default function SettingsPage() {
 
       <div className="bg-surface border border-border rounded-lg p-6 space-y-5">
         <h3 className="text-sm font-semibold text-foreground border-b border-border pb-2">
-          Decision Engine Sample Thresholds (FR-15)
+          Decision Engine Sample Thresholds
         </h3>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

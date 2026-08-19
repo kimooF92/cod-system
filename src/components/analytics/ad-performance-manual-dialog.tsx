@@ -83,7 +83,7 @@ export function AdPerformanceManualDialog({
             </div>
             <div>
               <h3 className="text-sm font-bold text-foreground">
-                Log Daily Ad Performance (FR-19)
+                Log Daily Ad Performance
               </h3>
               <p className="text-xs text-muted-foreground">
                 Record ad spend, impressions, clicks &amp; leads

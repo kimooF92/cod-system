@@ -76,7 +76,7 @@ export function CreativeAssetList({ initialAssets }: CreativeAssetListProps) {
             Creative Asset Library
           </h2>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Manage individual videos, images, aspect ratios &amp; performance tags (FR-16, FR-17)
+            Manage individual videos, images, aspect ratios &amp; performance tags
           </p>
         </div>
 

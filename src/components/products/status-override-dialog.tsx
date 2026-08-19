@@ -76,7 +76,7 @@ export function StatusOverrideDialog({
             </div>
             <div>
               <h3 className="text-sm font-bold text-foreground">
-                Manual Status Override (FR-11)
+                Manual Status Override
               </h3>
               <p className="text-xs text-muted-foreground truncate max-w-xs">
                 {product.name}

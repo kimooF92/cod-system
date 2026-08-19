@@ -144,7 +144,7 @@ export function ResearchItemCard({ item, onRefresh }: ResearchItemCardProps) {
               onClick={handleConvert}
               disabled={converting}
               className="flex items-center gap-1 px-2.5 py-1 rounded bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 border border-blue-500/20 text-xs font-medium transition-colors"
-              title="Convert to Product without re-typing (FR-8)"
+              title="Convert to Product without re-typing"
             >
               <span>{converting ? "Converting..." : "Convert to Product"}</span>
               <ArrowRight className="w-3 h-3" />

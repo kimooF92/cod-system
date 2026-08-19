@@ -42,7 +42,7 @@ export function ProductScoreDrawer({
             </div>
             <div>
               <h3 className="text-sm font-bold text-foreground">
-                0–100 Product Score Breakdown (FR-12)
+                0–100 Product Score Breakdown
               </h3>
               <p className="text-xs text-muted-foreground truncate max-w-[240px]">
                 {product.name}

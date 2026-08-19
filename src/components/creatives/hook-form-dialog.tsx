@@ -75,7 +75,7 @@ export function HookFormDialog({
             </div>
             <div>
               <h3 className="text-sm font-bold text-foreground">
-                Add Opening Hook (FR-14)
+                Add Opening Hook
               </h3>
               <p className="text-xs text-muted-foreground truncate max-w-xs">
                 {angle.name}

@@ -101,7 +101,7 @@ export function AngleRegistry({ initialAngles }: AngleRegistryProps) {
             Marketing Angles, Hooks &amp; Creative Formats
           </h2>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Systematize hook angles, pain points, promises &amp; video scripts (FR-13, FR-14, FR-15)
+            Systematize hook angles, pain points, promises &amp; video scripts
           </p>
         </div>
 

@@ -100,7 +100,7 @@ export function AdFormDialog({
             </div>
             <div>
               <h3 className="text-sm font-bold text-foreground">
-                Map Ad to Creative Asset (FR-18)
+                Map Ad to Creative Asset
               </h3>
               <p className="text-xs text-muted-foreground truncate max-w-xs">
                 {adSet.name}

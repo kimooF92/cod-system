@@ -55,7 +55,7 @@ export function CreativeRecommendationsBanner({
             <Zap className="w-3.5 h-3.5" />
           </div>
           <h3 className="text-xs font-bold text-foreground">
-            Automated Creative Recommendations (FR-22)
+            Automated Creative Recommendations
           </h3>
         </div>
 

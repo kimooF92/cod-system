@@ -214,7 +214,7 @@ function onFormSubmit(e) {
                 Google Sheets Real-Time Order Sync
               </h3>
               <p className="text-xs text-muted-foreground">
-                Import and de-duplicate live customer leads from Google Sheets or Webhook (FR-26, ARCH-4)
+                Import and de-duplicate live customer leads from Google Sheets or Webhook
               </p>
             </div>
           </div>
