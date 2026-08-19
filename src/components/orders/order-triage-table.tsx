@@ -20,6 +20,8 @@ import {
   Check,
   RotateCcw,
   XCircle,
+  Clock,
+  AlertTriangle,
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import {
@@ -34,8 +36,11 @@ import {
   TUNISIAN_GOVERNORATES,
   type OrderStatus,
 } from "@/lib/validations/order";
+import { isFollowUpDue } from "@/lib/engine/followup-rules";
 import { OrderFormDialog } from "./order-form-dialog";
 import { WhatsAppDialog } from "./whatsapp-dialog";
+import { CallAttemptDialog } from "./call-attempt-dialog";
+import { FollowUpQueueBanner } from "./followup-queue-banner";
 
 interface OrderTriageTableProps {
   initialOrders: Order[];
@@ -92,6 +97,7 @@ export function OrderTriageTable({ initialOrders }: OrderTriageTableProps) {
   const [selectedProductId, setSelectedProductId] = React.useState("ALL");
   const [selectedGov, setSelectedGov] = React.useState("ALL");
   const [selectedStatus, setSelectedStatus] = React.useState("ALL");
+  const [isDueOnly, setIsDueOnly] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
 
   // Selection for Batch Actions
@@ -100,6 +106,7 @@ export function OrderTriageTable({ initialOrders }: OrderTriageTableProps) {
   // Dialog states
   const [isOrderDialogOpen, setIsOrderDialogOpen] = React.useState(false);
   const [whatsAppOrder, setWhatsAppOrder] = React.useState<Order | null>(null);
+  const [callAttemptOrder, setCallAttemptOrder] = React.useState<Order | null>(null);
   const [loading, setLoading] = React.useState(false);
 
   React.useEffect(() => {
@@ -156,6 +163,11 @@ export function OrderTriageTable({ initialOrders }: OrderTriageTableProps) {
   };
 
   const filteredOrders = orders.filter((o) => {
+    if (isDueOnly) {
+      if (o.status !== "NO_ANSWER" || !isFollowUpDue(o.next_follow_up_at)) {
+        return false;
+      }
+    }
     if (!searchQuery) return true;
     const q = searchQuery.toLowerCase();
     return (
@@ -170,6 +182,9 @@ export function OrderTriageTable({ initialOrders }: OrderTriageTableProps) {
 
   const newOrdersCount = orders.filter((o) => o.status === "NEW_ORDER").length;
   const noAnswerCount = orders.filter((o) => o.status === "NO_ANSWER").length;
+  const dueCallbacksCount = orders.filter(
+    (o) => o.status === "NO_ANSWER" && isFollowUpDue(o.next_follow_up_at)
+  ).length;
   const confirmedCount = orders.filter((o) => o.status === "CONFIRMED").length;
   const deliveredCount = orders.filter((o) => o.status === "DELIVERED").length;
 
@@ -182,7 +197,7 @@ export function OrderTriageTable({ initialOrders }: OrderTriageTableProps) {
             COD Order Management &amp; Triage Cockpit
           </h2>
           <p className="text-xs text-muted-foreground mt-0.5">
-            1-click WhatsApp confirmation, inline status dispatch &amp; batch triage (FR-25, FR-26)
+            Follow-up scheduling, 1-click WhatsApp &amp; 3-attempt strike rules (FR-25, FR-26, FR-27, FR-28)
           </p>
         </div>
 
@@ -194,6 +209,13 @@ export function OrderTriageTable({ initialOrders }: OrderTriageTableProps) {
           <span>New COD Order</span>
         </button>
       </div>
+
+      {/* Follow-Up & Max Attempts Action Banner */}
+      <FollowUpQueueBanner
+        orders={orders}
+        onSelectDueFilter={() => setIsDueOnly(true)}
+        onRefresh={() => fetchOrders()}
+      />
 
       {/* Stats Counter Bar */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -209,9 +231,9 @@ export function OrderTriageTable({ initialOrders }: OrderTriageTableProps) {
 
         <div className="p-3 bg-surface border border-border rounded-lg flex items-center justify-between">
           <div>
-            <span className="text-[11px] font-medium text-muted-foreground">No Answer / Retry</span>
+            <span className="text-[11px] font-medium text-muted-foreground">No Answer / Due</span>
             <p className="text-lg font-mono font-bold text-amber-400 tabular-nums">
-              {noAnswerCount}
+              {noAnswerCount} {dueCallbacksCount > 0 && <span className="text-xs text-red-400">({dueCallbacksCount} due)</span>}
             </p>
           </div>
           <PhoneOff className="w-4 h-4 text-amber-400 opacity-80" />
@@ -275,11 +297,25 @@ export function OrderTriageTable({ initialOrders }: OrderTriageTableProps) {
       {/* Filter Row & Search */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border pb-3">
         <div className="flex items-center gap-2 flex-wrap">
+          {/* Due Callback Toggle */}
+          <button
+            onClick={() => setIsDueOnly(!isDueOnly)}
+            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5 ${
+              isDueOnly
+                ? "bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold"
+                : "bg-surface text-muted-foreground border border-border hover:text-foreground"
+            }`}
+          >
+            <Clock className="w-3.5 h-3.5" />
+            <span>Due Follow-Ups {dueCallbacksCount > 0 && `(${dueCallbacksCount})`}</span>
+          </button>
+
           {/* Status Filter */}
           <select
             value={selectedStatus}
             onChange={(e) => {
               setSelectedStatus(e.target.value);
+              setIsDueOnly(false);
               fetchOrders(selectedProductId, selectedGov, e.target.value);
             }}
             className="px-2.5 py-1.5 bg-surface border border-border rounded-md text-xs font-mono text-foreground focus:outline-none cursor-pointer"
@@ -356,7 +392,9 @@ export function OrderTriageTable({ initialOrders }: OrderTriageTableProps) {
             <p className="text-xs text-muted-foreground max-w-sm mx-auto">
               {searchQuery
                 ? `No orders matching "${searchQuery}".`
-                : "No orders match the current status and governorate filters."}
+                : isDueOnly
+                ? "All follow-up callbacks are up to date!"
+                : "No orders match the current filters."}
             </p>
           </div>
         ) : (
@@ -380,8 +418,8 @@ export function OrderTriageTable({ initialOrders }: OrderTriageTableProps) {
                   <th className="py-3 px-3">Location</th>
                   <th className="py-3 px-3">Product &amp; Qty</th>
                   <th className="py-3 px-3 text-right">Cash Due</th>
-                  <th className="py-3 px-3 text-center">Status</th>
-                  <th className="py-3 px-3 text-center">Quick Triage Actions</th>
+                  <th className="py-3 px-3 text-center">Status &amp; Attempts</th>
+                  <th className="py-3 px-3 text-center">Quick Actions</th>
                   <th className="py-3 px-3 text-center">Delete</th>
                 </tr>
               </thead>
@@ -389,12 +427,14 @@ export function OrderTriageTable({ initialOrders }: OrderTriageTableProps) {
                 {filteredOrders.map((order) => {
                   const style = statusBadges[order.status] || statusBadges.NEW_ORDER;
                   const isSelected = selectedIds.includes(order.id);
+                  const isDue = order.status === "NO_ANSWER" && isFollowUpDue(order.next_follow_up_at);
+                  const maxReached = order.attempt_count >= 3;
 
                   return (
                     <tr
                       key={order.id}
                       className={`hover:bg-surface-subtle/50 transition-colors ${
-                        isSelected ? "bg-blue-600/5" : ""
+                        isSelected ? "bg-blue-600/5" : isDue ? "bg-amber-500/5" : ""
                       }`}
                     >
                       <td className="py-3 px-3">
@@ -409,9 +449,17 @@ export function OrderTriageTable({ initialOrders }: OrderTriageTableProps) {
                       <td className="py-3 px-3 font-bold text-foreground whitespace-nowrap">
                         {order.order_number}
                         {order.attempt_count > 0 && (
-                          <span className="block text-[9px] font-normal text-muted-foreground">
-                            Calls: {order.attempt_count}
-                          </span>
+                          <div className="flex items-center gap-1 mt-0.5">
+                            <span
+                              className={`text-[9px] font-mono px-1 py-0.2 rounded font-bold ${
+                                maxReached
+                                  ? "bg-red-500/20 text-red-400 border border-red-500/30"
+                                  : "bg-surface-subtle text-muted-foreground border border-border"
+                              }`}
+                            >
+                              Attempt {order.attempt_count}/3 {maxReached ? "MAX" : ""}
+                            </span>
+                          </div>
                         )}
                       </td>
 
@@ -469,6 +517,11 @@ export function OrderTriageTable({ initialOrders }: OrderTriageTableProps) {
                         >
                           {style.label}
                         </span>
+                        {isDue && (
+                          <span className="block text-[9px] font-mono text-red-400 font-bold mt-0.5 animate-pulse">
+                            CALL DUE NOW
+                          </span>
+                        )}
                       </td>
 
                       {/* Inline Quick Action Buttons */}
@@ -483,13 +536,26 @@ export function OrderTriageTable({ initialOrders }: OrderTriageTableProps) {
                               >
                                 Confirm
                               </button>
-                              <button
-                                onClick={() => handleStatusChange(order.id, "NO_ANSWER")}
-                                className="px-1.5 py-0.5 rounded bg-amber-500/15 hover:bg-amber-500/25 text-amber-400 border border-amber-500/30 text-[10px] transition-colors"
-                                title="Customer Didn't Answer"
-                              >
-                                No Answer
-                              </button>
+
+                              {maxReached ? (
+                                <button
+                                  onClick={() => handleStatusChange(order.id, "CANCELLED")}
+                                  className="px-2 py-0.5 rounded bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/40 text-[10px] font-bold transition-colors"
+                                  title="Cancel after 3 failed call attempts"
+                                >
+                                  Cancel (3 Strikes)
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => setCallAttemptOrder(order)}
+                                  className="px-1.5 py-0.5 rounded bg-amber-500/15 hover:bg-amber-500/25 text-amber-400 border border-amber-500/30 text-[10px] transition-colors flex items-center gap-0.5"
+                                  title="Log No Answer attempt and schedule callback"
+                                >
+                                  <Clock className="w-2.5 h-2.5" />
+                                  <span>Retry</span>
+                                </button>
+                              )}
+
                               <button
                                 onClick={() => handleStatusChange(order.id, "CANCELLED")}
                                 className="px-1.5 py-0.5 rounded bg-surface-subtle hover:bg-surface text-muted-foreground border border-border text-[10px] transition-colors"
@@ -567,6 +633,14 @@ export function OrderTriageTable({ initialOrders }: OrderTriageTableProps) {
         order={whatsAppOrder}
         isOpen={!!whatsAppOrder}
         onClose={() => setWhatsAppOrder(null)}
+      />
+
+      {/* Call Attempt & Schedule Dialog */}
+      <CallAttemptDialog
+        order={callAttemptOrder}
+        isOpen={!!callAttemptOrder}
+        onClose={() => setCallAttemptOrder(null)}
+        onSuccess={() => fetchOrders(selectedProductId, selectedGov, selectedStatus)}
       />
     </div>
   );

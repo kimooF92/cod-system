@@ -291,6 +291,110 @@ export async function updateOrderStatus(
 }
 
 /**
+ * Logs a call attempt and schedules the next follow-up timestamp (FR-27)
+ */
+export async function logCallAttemptAndSchedule(
+  id: string,
+  preset: "IN_2_HOURS" | "IN_4_HOURS" | "TOMORROW_MORNING" | "TOMORROW_AFTERNOON",
+  notes?: string
+): Promise<{ success: boolean; newAttemptCount: number; nextFollowUpAt: string; error?: string }> {
+  const { computeFollowUpTimestamp } = await import("@/lib/engine/followup-rules");
+  const now = new Date().toISOString();
+  const nextFollowUpAt = computeFollowUpTimestamp(preset);
+
+  let newAttempts = 1;
+
+  try {
+    const supabase = await createServerSupabaseClient();
+    const { data: existing } = await (supabase.from("orders") as any)
+      .select("attempt_count")
+      .eq("id", id)
+      .single();
+
+    newAttempts = (existing?.attempt_count || 0) + 1;
+
+    await (supabase.from("orders") as any)
+      .update({
+        status: "NO_ANSWER",
+        attempt_count: newAttempts,
+        last_contact_at: now,
+        next_follow_up_at: nextFollowUpAt,
+        notes: notes ? notes : undefined,
+        updated_at: now,
+      })
+      .eq("id", id);
+  } catch {
+    // ignore
+  }
+
+  memoryOrders = memoryOrders.map((o) => {
+    if (o.id === id) {
+      newAttempts = o.attempt_count + 1;
+      return {
+        ...o,
+        status: "NO_ANSWER" as OrderStatus,
+        attempt_count: newAttempts,
+        last_contact_at: now,
+        next_follow_up_at: nextFollowUpAt,
+        notes: notes !== undefined ? notes : o.notes,
+        updated_at: now,
+      };
+    }
+    return o;
+  });
+
+  revalidatePath("/orders");
+  revalidatePath("/");
+  return { success: true, newAttemptCount: newAttempts, nextFollowUpAt };
+}
+
+/**
+ * 1-Click cancellation of all orders reaching 3 failed attempts (FR-28)
+ */
+export async function cancelMaxAttemptOrders(): Promise<{
+  success: boolean;
+  cancelledCount: number;
+  error?: string;
+}> {
+  const now = new Date().toISOString();
+  const targetIds = memoryOrders
+    .filter((o) => o.attempt_count >= 3 && (o.status === "NO_ANSWER" || o.status === "NEW_ORDER"))
+    .map((o) => o.id);
+
+  if (targetIds.length === 0) {
+    return { success: true, cancelledCount: 0 };
+  }
+
+  try {
+    const supabase = await createServerSupabaseClient();
+    await (supabase.from("orders") as any)
+      .update({
+        status: "CANCELLED",
+        return_reason: "3 Failed Call Attempts",
+        updated_at: now,
+      })
+      .in("id", targetIds);
+  } catch {
+    // ignore
+  }
+
+  memoryOrders = memoryOrders.map((o) =>
+    targetIds.includes(o.id)
+      ? {
+          ...o,
+          status: "CANCELLED" as OrderStatus,
+          return_reason: "3 Failed Call Attempts",
+          updated_at: now,
+        }
+      : o
+  );
+
+  revalidatePath("/orders");
+  revalidatePath("/");
+  return { success: true, cancelledCount: targetIds.length };
+}
+
+/**
  * Batch updates multiple orders to a new status
  */
 export async function batchUpdateOrderStatus(
