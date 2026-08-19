@@ -335,24 +335,98 @@ function onFormSubmit(e) {
 
           {/* Mode 3: Webhook Script */}
           {activeMode === "webhook" && (
-            <div className="space-y-3">
-              <div className="p-4 bg-surface-subtle border border-border rounded-lg space-y-3 text-xs">
+            <div className="space-y-4">
+              <div className="p-4 bg-surface-subtle border border-border rounded-lg space-y-4 text-xs">
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold text-foreground">Real-Time Google Apps Script Trigger</span>
+                  <div className="flex items-center gap-2">
+                    <Code2 className="w-4 h-4 text-emerald-400" />
+                    <span className="font-semibold text-foreground">Real-Time Google Apps Script Webhook Setup</span>
+                  </div>
                   <button
                     type="button"
                     onClick={copyAppsScriptSnippet}
-                    className="flex items-center gap-1 text-[11px] px-2 py-1 bg-surface border border-border rounded text-emerald-400 hover:text-emerald-300"
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md text-xs font-semibold shadow-sm transition-colors"
                   >
                     {copiedScript ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                    <span>{copiedScript ? "Copied!" : "Copy Script"}</span>
+                    <span>{copiedScript ? "Copied Script!" : "Copy Script Code"}</span>
                   </button>
                 </div>
-                <p className="text-muted-foreground text-[11px]">
-                  Paste this script in Google Sheets under <strong>Extensions &gt; Apps Script</strong> to stream new leads instantly into COD Growth OS whenever a row is submitted.
-                </p>
-                <div className="bg-surface p-2.5 rounded border border-border font-mono text-[10px] text-muted-foreground overflow-x-auto">
-                  Endpoint: <span className="text-emerald-400 font-bold">POST /api/sync/orders</span>
+
+                {/* 3 Steps */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                  <div className="p-3 bg-surface border border-border rounded-lg space-y-1">
+                    <span className="text-[10px] font-mono font-bold text-emerald-400">STEP 1</span>
+                    <p className="text-[11px] font-semibold text-foreground">Open Apps Script</p>
+                    <p className="text-[10px] text-muted-foreground">
+                      In your Google Sheet, click <strong>Extensions &gt; Apps Script</strong>.
+                    </p>
+                  </div>
+
+                  <div className="p-3 bg-surface border border-border rounded-lg space-y-1">
+                    <span className="text-[10px] font-mono font-bold text-emerald-400">STEP 2</span>
+                    <p className="text-[11px] font-semibold text-foreground">Paste Script Code</p>
+                    <p className="text-[10px] text-muted-foreground">
+                      Click the button above to copy, then paste into <strong>Code.gs</strong>.
+                    </p>
+                  </div>
+
+                  <div className="p-3 bg-surface border border-border rounded-lg space-y-1">
+                    <span className="text-[10px] font-mono font-bold text-emerald-400">STEP 3</span>
+                    <p className="text-[11px] font-semibold text-foreground">Add Trigger</p>
+                    <p className="text-[10px] text-muted-foreground">
+                      Go to ⏰ <strong>Triggers</strong> &gt; Add trigger for <code className="text-emerald-400">onFormSubmit</code> on <strong>Form submit</strong>.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Webhook Endpoint & Target Product */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                  <div className="p-2.5 bg-surface rounded border border-border font-mono text-[11px] space-y-1">
+                    <span className="text-[10px] text-muted-foreground block">Webhook Endpoint:</span>
+                    <span className="text-emerald-400 font-bold break-all">
+                      {typeof window !== "undefined" ? window.location.origin : "https://your-domain.vercel.app"}/api/sync/orders
+                    </span>
+                  </div>
+
+                  <div className="p-2.5 bg-surface rounded border border-border space-y-1 text-xs">
+                    <span className="text-[10px] text-muted-foreground block font-mono">Assign Synced Leads To:</span>
+                    <select
+                      value={defaultProductId}
+                      onChange={(e) => setDefaultProductId(e.target.value)}
+                      className="w-full bg-surface-subtle border border-border rounded px-2 py-1 text-xs text-foreground font-mono"
+                    >
+                      {products.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name} ({formatCurrency(Number(p.selling_price))})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Script Code Preview */}
+                <div className="space-y-1 pt-1">
+                  <span className="text-[10px] font-mono text-muted-foreground">Script Preview (Code.gs):</span>
+                  <pre className="bg-surface p-3 rounded-lg border border-border font-mono text-[10px] text-muted-foreground overflow-x-auto max-h-40 overflow-y-auto leading-relaxed">
+{`function onFormSubmit(e) {
+  var url = "${typeof window !== 'undefined' ? window.location.origin : 'https://your-domain.vercel.app'}/api/sync/orders";
+  var values = e.namedValues || {};
+  var payload = {
+    customer_name: values['Full Name'] ? values['Full Name'][0] : values['Name'][0],
+    phone: values['Phone Number'] ? values['Phone Number'][0] : values['Phone'][0],
+    governorate: values['Governorate'] ? values['Governorate'][0] : 'Tunis',
+    address: values['Address'] ? values['Address'][0] : 'Centre Ville',
+    product_id: "${defaultProductId}",
+    quantity: 1,
+    source: "Google Sheets Webhook"
+  };
+  UrlFetchApp.fetch(url, {
+    method: 'post',
+    contentType: 'application/json',
+    payload: JSON.stringify(payload)
+  });
+}`}
+                  </pre>
                 </div>
               </div>
             </div>
