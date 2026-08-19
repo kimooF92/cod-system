@@ -1,20 +1,40 @@
 import { StatCard } from "@/components/ui/stat-card";
 import { DecisionBadge } from "@/components/ui/decision-badge";
+import { DailyChecklist } from "@/components/dashboard/daily-checklist";
+import { StreakTracker } from "@/components/dashboard/streak-tracker";
+import { getDashboardKPIs } from "@/actions/dashboard";
+import { getProducts } from "@/actions/products";
 import { formatCurrency, formatPercent } from "@/lib/utils";
 import {
   DollarSign,
   TrendingUp,
-  Users,
-  ShoppingBag,
   Truck,
   Percent,
-  CheckCircle2,
   AlertTriangle,
   ArrowRight,
+  Package,
+  ShoppingBag,
 } from "lucide-react";
 import Link from "next/link";
 
-export default function DashboardPage() {
+export const revalidate = 60; // Revalidate every 60s
+
+export default async function DashboardPage() {
+  const [kpis, products] = await Promise.all([
+    getDashboardKPIs(),
+    getProducts(),
+  ]);
+
+  const topProducts = products
+    .filter((p) => ["WINNER", "SCALING", "TESTING"].includes(p.status))
+    .slice(0, 4);
+
+  const decisionsNeeded = products.filter(
+    (p) => p.status === "HOLD" || p.status === "TESTING"
+  ).length;
+
+  const pendingOrders = kpis.newOrdersCount;
+
   return (
     <div className="space-y-6">
       {/* Top Banner / Welcome Ritual Header */}
@@ -24,109 +44,123 @@ export default function DashboardPage() {
             Morning Operating Cockpit
           </h2>
           <p className="text-xs text-muted-foreground mt-0.5">
-            4 daily checklist actions remaining for today &bull; 1 pending product decision
+            {pendingOrders > 0
+              ? `${pendingOrders} order${pendingOrders > 1 ? "s" : ""} need confirmation`
+              : "All orders processed"}{" "}
+            &bull;{" "}
+            {decisionsNeeded > 0
+              ? `${decisionsNeeded} product decision${decisionsNeeded > 1 ? "s" : ""} pending`
+              : "No decisions pending"}
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-xs font-mono text-amber-400">
-            <AlertTriangle className="w-3.5 h-3.5" />
-            <span>1 Decision Needed</span>
-          </div>
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-surface-subtle border border-border text-xs font-mono text-muted-foreground">
-            <span>🔥 5-Day Streak</span>
-          </div>
+          {decisionsNeeded > 0 && (
+            <Link
+              href="/products"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-xs font-mono text-amber-400 hover:bg-amber-500/15 transition-colors"
+            >
+              <AlertTriangle className="w-3.5 h-3.5" />
+              <span>{decisionsNeeded} Decision{decisionsNeeded > 1 ? "s" : ""} Needed</span>
+            </Link>
+          )}
+          {/* Live Streak — client component */}
+          <StreakTracker />
         </div>
       </div>
 
-      {/* KPI Stats Grid (FR-1) */}
+      {/* KPI Stats Grid — Live Data */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
-          label="Delivered Net Profit"
-          value={formatCurrency(142.5)}
-          delta="+18% vs Target"
-          deltaType="positive"
+          label="Today Net Profit"
+          value={formatCurrency(kpis.todayNetProfit)}
+          delta={
+            kpis.todayNetProfit > 0
+              ? `+${kpis.deliveredCount} delivered`
+              : kpis.todayNetProfit === 0
+              ? "No data yet"
+              : "Negative"
+          }
+          deltaType={
+            kpis.todayNetProfit > 0
+              ? "positive"
+              : kpis.todayNetProfit === 0
+              ? "neutral"
+              : "negative"
+          }
           subtext="After ad spend, product & delivery costs"
           icon={<DollarSign className="w-4 h-4" />}
         />
         <StatCard
-          label="Ad Spend"
-          value={formatCurrency(85.0)}
-          delta="CPL 3.400 DT"
-          deltaType="positive"
-          subtext="25 total leads generated"
+          label="Ad Spend Today"
+          value={formatCurrency(kpis.todayAdSpend)}
+          delta={kpis.todayCPL !== null ? `CPL ${formatCurrency(kpis.todayCPL)}` : "No ads logged"}
+          deltaType={
+            kpis.todayCPL !== null && kpis.todayCPL <= 5 ? "positive" : "neutral"
+          }
+          subtext={`${kpis.todayLeads} total leads generated`}
           icon={<TrendingUp className="w-4 h-4" />}
         />
         <StatCard
           label="Delivery Rate"
-          value={formatPercent(0.685)}
-          delta="Target: 65%"
-          deltaType="positive"
-          subtext="14 of 20 confirmed orders delivered"
+          value={
+            kpis.deliveryRate !== null
+              ? formatPercent(kpis.deliveryRate)
+              : "—"
+          }
+          delta={
+            kpis.deliveryRate !== null
+              ? kpis.deliveryRate >= 0.65
+                ? "Above target"
+                : "Below target"
+              : "No deliveries"
+          }
+          deltaType={
+            kpis.deliveryRate === null
+              ? "neutral"
+              : kpis.deliveryRate >= 0.65
+              ? "positive"
+              : "warning"
+          }
+          subtext={`${kpis.deliveredCount} of ${kpis.deliveredCount + kpis.returnedCount} delivered`}
           icon={<Truck className="w-4 h-4" />}
         />
         <StatCard
-          label="Profit / Delivered Order"
-          value={formatCurrency(10.178)}
-          delta="Healthy"
-          deltaType="positive"
-          subtext="14 delivered orders"
+          label="Profit / Delivered"
+          value={
+            kpis.profitPerDeliveredOrder !== null
+              ? formatCurrency(kpis.profitPerDeliveredOrder)
+              : "—"
+          }
+          delta={
+            kpis.profitPerDeliveredOrder !== null
+              ? kpis.profitPerDeliveredOrder >= 10
+                ? "Healthy"
+                : kpis.profitPerDeliveredOrder > 0
+                ? "Low margin"
+                : "Loss"
+              : "No data"
+          }
+          deltaType={
+            kpis.profitPerDeliveredOrder === null
+              ? "neutral"
+              : kpis.profitPerDeliveredOrder >= 10
+              ? "positive"
+              : kpis.profitPerDeliveredOrder > 0
+              ? "warning"
+              : "negative"
+          }
+          subtext={`${kpis.deliveredCount} delivered orders`}
           icon={<Percent className="w-4 h-4" />}
         />
       </div>
 
-      {/* Two Column Layout: Daily Checklist (Retention) + Decision Inbox */}
+      {/* Two Column Layout: Daily Checklist (Retention) + Product Scoreboard */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Daily Habit Checklist (FR-5, UX-DR-3) */}
-        <div className="bg-surface border border-border rounded-lg p-5 flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-foreground">
-                Daily Operating Checklist
-              </h3>
-              <span className="text-xs font-mono text-muted-foreground">
-                0 / 4 completed
-              </span>
-            </div>
+        {/* Daily Habit Checklist — Client Component with localStorage */}
+        <DailyChecklist />
 
-            {/* Progress bar */}
-            <div className="w-full bg-surface-subtle rounded-full h-1.5 mb-4 overflow-hidden border border-border">
-              <div className="bg-blue-600 h-1.5 rounded-full w-0 transition-all duration-300" />
-            </div>
-
-            <ul className="space-y-2.5">
-              {[
-                { text: "Review yesterday ad spend & profit", href: "/analytics" },
-                { text: "Process pending order confirmations (5 orders)", href: "/orders" },
-                { text: "Update courier delivered / returned status", href: "/orders" },
-                { text: "Review Kill / Hold / Scale recommendations", href: "/products" },
-              ].map((task, idx) => (
-                <li
-                  key={idx}
-                  className="flex items-center justify-between p-2.5 rounded-md bg-surface-subtle border border-border/60 hover:border-border transition-colors text-xs"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-4 h-4 rounded border border-muted-foreground/40 flex items-center justify-center cursor-pointer hover:border-blue-500" />
-                    <span className="text-foreground">{task.text}</span>
-                  </div>
-                  <Link
-                    href={task.href}
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="mt-4 pt-3 border-t border-border/50 text-[11px] text-muted-foreground flex items-center justify-between font-mono">
-            <span>Morning Review Loop</span>
-            <span>Target: &lt; 10 min</span>
-          </div>
-        </div>
-
-        {/* Product Scoreboard Preview (FR-2, FR-3) */}
+        {/* Product Scoreboard — Live Data */}
         <div className="lg:col-span-2 bg-surface border border-border rounded-lg p-5">
           <div className="flex items-center justify-between mb-4">
             <div>
@@ -146,79 +180,115 @@ export default function DashboardPage() {
             </Link>
           </div>
 
-          {/* High-Density Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs text-left">
-              <thead>
-                <tr className="border-b border-border text-muted-foreground uppercase font-mono text-[10px]">
-                  <th className="pb-2 font-medium">Product</th>
-                  <th className="pb-2 font-medium">Score</th>
-                  <th className="pb-2 font-medium">Status</th>
-                  <th className="pb-2 font-medium text-right">Leads</th>
-                  <th className="pb-2 font-medium text-right">CPL</th>
-                  <th className="pb-2 font-medium text-right">Delivery %</th>
-                  <th className="pb-2 font-medium text-right">Net Profit</th>
-                  <th className="pb-2 font-medium text-right">Decision</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/50">
-                <tr className="hover:bg-surface-subtle/50 transition-colors">
-                  <td className="py-2.5 font-medium text-foreground">
-                    Magnetic Phone Holder Pro
-                  </td>
-                  <td className="py-2.5">
-                    <span className="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-mono text-[10px] font-bold">
-                      89 / 100
-                    </span>
-                  </td>
-                  <td className="py-2.5">
-                    <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono text-[10px]">
-                      WINNER
-                    </span>
-                  </td>
-                  <td className="py-2.5 text-right font-mono tabular-nums">48</td>
-                  <td className="py-2.5 text-right font-mono tabular-nums">3.200 DT</td>
-                  <td className="py-2.5 text-right font-mono tabular-nums text-emerald-400">72.4%</td>
-                  <td className="py-2.5 text-right font-mono tabular-nums text-emerald-400 font-semibold">
-                    +340.000 DT
-                  </td>
-                  <td className="py-2.5 text-right">
-                    <DecisionBadge variant="scale" size="sm">
-                      SCALE
-                    </DecisionBadge>
-                  </td>
-                </tr>
+          {topProducts.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-10 text-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-surface-subtle border border-border flex items-center justify-center text-muted-foreground">
+                <Package className="w-5 h-5" />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                No active products yet.{" "}
+                <Link href="/products" className="text-blue-400 hover:underline">
+                  Add your first product →
+                </Link>
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs text-left">
+                <thead>
+                  <tr className="border-b border-border text-muted-foreground uppercase font-mono text-[10px]">
+                    <th className="pb-2 font-medium">Product</th>
+                    <th className="pb-2 font-medium">Status</th>
+                    <th className="pb-2 font-medium text-right">Price</th>
+                    <th className="pb-2 font-medium text-right">Target CPL</th>
+                    <th className="pb-2 font-medium text-right">Decision</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/50">
+                  {topProducts.map((p) => {
+                    const decisionVariant =
+                      p.status === "WINNER" || p.status === "SCALING"
+                        ? "scale"
+                        : p.status === "TESTING"
+                        ? "investigate"
+                        : "hold";
 
-                <tr className="hover:bg-surface-subtle/50 transition-colors">
-                  <td className="py-2.5 font-medium text-foreground">
-                    Wireless Earbuds V2
-                  </td>
-                  <td className="py-2.5">
-                    <span className="px-2 py-0.5 rounded bg-red-500/10 text-red-400 border border-red-500/20 font-mono text-[10px]">
-                      38 / 100
-                    </span>
-                  </td>
-                  <td className="py-2.5">
-                    <span className="px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 font-mono text-[10px]">
-                      TESTING
-                    </span>
-                  </td>
-                  <td className="py-2.5 text-right font-mono tabular-nums">32</td>
-                  <td className="py-2.5 text-right font-mono tabular-nums text-red-400">7.500 DT</td>
-                  <td className="py-2.5 text-right font-mono tabular-nums text-amber-400">45.0%</td>
-                  <td className="py-2.5 text-right font-mono tabular-nums text-red-400">
-                    -48.000 DT
-                  </td>
-                  <td className="py-2.5 text-right">
-                    <DecisionBadge variant="kill" size="sm">
-                      KILL
-                    </DecisionBadge>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+                    const statusColor =
+                      p.status === "WINNER" || p.status === "SCALING"
+                        ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                        : p.status === "TESTING"
+                        ? "bg-blue-500/10 text-blue-400 border-blue-500/20"
+                        : "bg-amber-500/10 text-amber-400 border-amber-500/20";
+
+                    return (
+                      <tr
+                        key={p.id}
+                        className="hover:bg-surface-subtle/50 transition-colors"
+                      >
+                        <td className="py-2.5 font-medium text-foreground max-w-[160px] truncate">
+                          {p.name}
+                        </td>
+                        <td className="py-2.5">
+                          <span
+                            className={`px-2 py-0.5 rounded border font-mono text-[10px] ${statusColor}`}
+                          >
+                            {p.status}
+                          </span>
+                        </td>
+                        <td className="py-2.5 text-right font-mono tabular-nums">
+                          {formatCurrency(p.selling_price)}
+                        </td>
+                        <td className="py-2.5 text-right font-mono tabular-nums text-muted-foreground">
+                          {formatCurrency(p.target_cpl)}
+                        </td>
+                        <td className="py-2.5 text-right">
+                          <DecisionBadge variant={decisionVariant as any} size="sm">
+                            {p.status === "WINNER" || p.status === "SCALING"
+                              ? "SCALE"
+                              : p.status === "TESTING"
+                              ? "WATCH"
+                              : "DECIDE"}
+                          </DecisionBadge>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
+      </div>
+
+      {/* Quick Links Row */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {[
+          { href: "/orders", icon: ShoppingBag, label: "Orders", count: kpis.newOrdersCount, color: "text-emerald-400", countLabel: "new" },
+          { href: "/products", icon: Package, label: "Products", count: decisionsNeeded, color: "text-amber-400", countLabel: "need decision" },
+          { href: "/analytics", icon: TrendingUp, label: "Analytics", count: kpis.todayLeads, color: "text-blue-400", countLabel: "leads today" },
+          { href: "/research", icon: AlertTriangle, label: "Research", count: null, color: "text-purple-400", countLabel: "" },
+        ].map((item) => {
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="bg-surface border border-border rounded-lg p-4 flex flex-col gap-2 hover:border-muted-foreground/30 transition-all group"
+            >
+              <div className="flex items-center justify-between">
+                <Icon className={`w-4 h-4 ${item.color}`} />
+                {item.count !== null && item.count > 0 && (
+                  <span className={`text-[10px] font-mono font-bold ${item.color}`}>
+                    {item.count} {item.countLabel}
+                  </span>
+                )}
+              </div>
+              <span className="text-xs font-medium text-foreground group-hover:text-foreground">
+                {item.label}
+              </span>
+            </Link>
+          );
+        })}
       </div>
     </div>
   );
