@@ -416,17 +416,37 @@ export function OrderTriageTable({ initialOrders }: OrderTriageTableProps) {
             Loading order triage queue...
           </div>
         ) : filteredOrders.length === 0 ? (
-          <div className="p-12 text-center space-y-3">
-            <h4 className="text-sm font-semibold text-foreground">
-              No orders found in queue
-            </h4>
-            <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-              {searchQuery
-                ? `No orders matching "${searchQuery}".`
-                : isDueOnly
-                ? "All follow-up callbacks are up to date!"
-                : "No orders match the current filters."}
-            </p>
+          <div className="p-12 text-center space-y-4">
+            <div className="w-12 h-12 rounded-full bg-surface-subtle border border-border flex items-center justify-center text-muted-foreground mx-auto">
+              <ShoppingBag className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="text-sm font-semibold text-foreground mb-1">
+                {searchQuery
+                  ? `No orders matching "${searchQuery}"`
+                  : isDueOnly
+                  ? "All callbacks up to date! 🎉"
+                  : orders.length === 0
+                  ? "No orders yet"
+                  : "No orders match the current filters"}
+              </h4>
+              <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+                {orders.length === 0
+                  ? "Log your first COD order manually or sync from a Google Sheet."
+                  : searchQuery
+                  ? "Try a different search term or clear filters."
+                  : "Adjust the filters above to see more orders."}
+              </p>
+            </div>
+            {orders.length === 0 && (
+              <button
+                onClick={() => setIsOrderDialogOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium transition-colors"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Log First Order
+              </button>
+            )}
           </div>
         ) : (
           <div className="overflow-x-auto">

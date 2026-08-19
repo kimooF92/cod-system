@@ -1,15 +1,14 @@
 "use client";
 
 import * as React from "react";
-import { Plus, Sun, Moon, Calendar, ShieldCheck } from "lucide-react";
-import { formatCurrency } from "@/lib/utils";
+import { Sun, Moon, Calendar, ShieldCheck } from "lucide-react";
+import { QuickCreateMenu } from "./quick-create-menu";
 
 interface AppHeaderProps {
   title?: string;
-  onQuickCreate?: () => void;
 }
 
-export function AppHeader({ title = "Operations Cockpit", onQuickCreate }: AppHeaderProps) {
+export function AppHeader({ title = "Operations Cockpit" }: AppHeaderProps) {
   const [theme, setTheme] = React.useState<"dark" | "light">("dark");
 
   const toggleTheme = () => {
@@ -39,26 +38,8 @@ export function AppHeader({ title = "Operations Cockpit", onQuickCreate }: AppHe
           <span>Today (Default)</span>
         </div>
 
-        {/* Available Cash Pill */}
-        <div className="flex items-center gap-2 px-3 py-1 rounded-md bg-surface-subtle border border-border">
-          <span className="text-[11px] uppercase font-medium text-muted-foreground">Cash</span>
-          <span className="text-xs font-mono font-bold text-foreground tabular-nums">
-            {formatCurrency(2450.0)}
-          </span>
-        </div>
-
-        {/* Quick Create Action Button */}
-        <button
-          onClick={onQuickCreate}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium transition-colors shadow-sm"
-          title="Quick Create (c)"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">Create</span>
-          <kbd className="hidden lg:inline-block ml-1 px-1 py-0.2 bg-blue-700/50 rounded text-[9px] font-mono">
-            c
-          </kbd>
-        </button>
+        {/* Quick Create — wired to global context */}
+        <QuickCreateMenu />
 
         {/* Theme Toggle */}
         <button
