@@ -1,12 +1,12 @@
 import { getOrders } from "@/actions/orders";
-import { OrderTable } from "@/components/orders/order-table";
+import { OrderTriageTable } from "@/components/orders/order-triage-table";
 
 export const metadata = {
-  title: "COD Orders & Delivery Tracking — COD Growth OS",
+  title: "COD Order Triage & WhatsApp Confirmation — COD Growth OS",
 };
 
 export default async function OrdersPage() {
   const initialOrders = await getOrders();
 
-  return <OrderTable initialOrders={initialOrders} />;
+  return <OrderTriageTable initialOrders={initialOrders} />;
 }

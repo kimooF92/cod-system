@@ -239,6 +239,95 @@ export async function createOrder(
 }
 
 /**
+ * Updates an order status with attempt tracking (FR-25)
+ */
+export async function updateOrderStatus(
+  id: string,
+  newStatus: OrderStatus,
+  notes?: string
+): Promise<{ success: boolean; error?: string }> {
+  const now = new Date().toISOString();
+
+  try {
+    const supabase = await createServerSupabaseClient();
+    const { data: existing } = await (supabase.from("orders") as any)
+      .select("attempt_count")
+      .eq("id", id)
+      .single();
+
+    const newAttempts = (existing?.attempt_count || 0) + (newStatus === "NO_ANSWER" || newStatus === "CONFIRMED" ? 1 : 0);
+
+    await (supabase.from("orders") as any)
+      .update({
+        status: newStatus,
+        attempt_count: newAttempts,
+        last_contact_at: now,
+        notes: notes ? notes : undefined,
+        updated_at: now,
+      })
+      .eq("id", id);
+  } catch {
+    // ignore
+  }
+
+  memoryOrders = memoryOrders.map((o) => {
+    if (o.id === id) {
+      const newAttempts = o.attempt_count + (newStatus === "NO_ANSWER" || newStatus === "CONFIRMED" ? 1 : 0);
+      return {
+        ...o,
+        status: newStatus,
+        attempt_count: newAttempts,
+        last_contact_at: now,
+        notes: notes !== undefined ? notes : o.notes,
+        updated_at: now,
+      };
+    }
+    return o;
+  });
+
+  revalidatePath("/orders");
+  revalidatePath("/");
+  return { success: true };
+}
+
+/**
+ * Batch updates multiple orders to a new status
+ */
+export async function batchUpdateOrderStatus(
+  ids: string[],
+  newStatus: OrderStatus
+): Promise<{ success: boolean; updatedCount: number; error?: string }> {
+  if (!ids || ids.length === 0) return { success: true, updatedCount: 0 };
+  const now = new Date().toISOString();
+
+  try {
+    const supabase = await createServerSupabaseClient();
+    await (supabase.from("orders") as any)
+      .update({
+        status: newStatus,
+        updated_at: now,
+      })
+      .in("id", ids);
+  } catch {
+    // ignore
+  }
+
+  memoryOrders = memoryOrders.map((o) =>
+    ids.includes(o.id)
+      ? {
+          ...o,
+          status: newStatus,
+          updated_at: now,
+        }
+      : o
+  );
+
+  revalidatePath("/orders");
+  revalidatePath("/");
+  return { success: true, updatedCount: ids.length };
+}
+
+/**
  * Deletes an order
  */
 export async function deleteOrder(
