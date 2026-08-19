@@ -52,13 +52,13 @@ development_status:
   2-5-automated-creative-recommendation-engine: done
   epic-2-retrospective: optional
 
-  epic-3: in-progress
+  epic-3: done
   3-1-cod-order-intake-manual-entry: done
   3-2-high-density-order-triage-table-with-whatsapp-actions: done
   3-3-follow-up-scheduler-call-attempt-logging: done
   3-4-courier-delivery-return-outcome-reconciliation: done
   3-5-operational-rates-performance-calculations: done
-  3-6-google-sheets-real-time-order-sync-engine: backlog
+  3-6-google-sheets-real-time-order-sync-engine: done
   epic-3-retrospective: optional
 
   epic-4: backlog

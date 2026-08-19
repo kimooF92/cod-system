@@ -22,6 +22,7 @@ import {
   XCircle,
   Clock,
   AlertTriangle,
+  FileSpreadsheet,
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import {
@@ -44,6 +45,7 @@ import { CourierReconciliationDialog } from "./courier-reconciliation-dialog";
 import { BatchDispatchDialog } from "./batch-dispatch-dialog";
 import { FollowUpQueueBanner } from "./followup-queue-banner";
 import { OperationalRatesBar } from "./operational-rates-bar";
+import { SheetsSyncDialog } from "./sheets-sync-dialog";
 
 interface OrderTriageTableProps {
   initialOrders: Order[];
@@ -112,6 +114,7 @@ export function OrderTriageTable({ initialOrders }: OrderTriageTableProps) {
   const [callAttemptOrder, setCallAttemptOrder] = React.useState<Order | null>(null);
   const [reconciliationOrder, setReconciliationOrder] = React.useState<Order | null>(null);
   const [isBatchDispatchOpen, setIsBatchDispatchOpen] = React.useState(false);
+  const [isSheetsSyncOpen, setIsSheetsSyncOpen] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
 
   React.useEffect(() => {
@@ -206,13 +209,24 @@ export function OrderTriageTable({ initialOrders }: OrderTriageTableProps) {
           </p>
         </div>
 
-        <button
-          onClick={() => setIsOrderDialogOpen(true)}
-          className="flex items-center gap-1.5 px-3.5 py-2 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition-colors shadow-sm self-start sm:self-auto"
-        >
-          <Plus className="w-4 h-4" />
-          <span>New COD Order</span>
-        </button>
+        <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+          <button
+            onClick={() => setIsSheetsSyncOpen(true)}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-md bg-surface-subtle hover:bg-surface border border-border text-foreground text-xs font-semibold transition-colors shadow-sm"
+            title="Import live leads from Google Sheets"
+          >
+            <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
+            <span>Sync Google Sheet</span>
+          </button>
+
+          <button
+            onClick={() => setIsOrderDialogOpen(true)}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition-colors shadow-sm"
+          >
+            <Plus className="w-4 h-4" />
+            <span>New COD Order</span>
+          </button>
+        </div>
       </div>
 
       {/* Live Operational Rates & Fulfillment Cockpit (Story 3.5) */}
@@ -712,6 +726,15 @@ export function OrderTriageTable({ initialOrders }: OrderTriageTableProps) {
           setSelectedIds([]);
           fetchOrders(selectedProductId, selectedGov, selectedStatus);
         }}
+      />
+
+      {/* Google Sheets Sync Dialog (Story 3.6) */}
+      <SheetsSyncDialog
+        isOpen={isSheetsSyncOpen}
+        onClose={() => setIsSheetsSyncOpen(false)}
+        onSuccess={() => fetchOrders(selectedProductId, selectedGov, selectedStatus)}
+        existingOrders={orders}
+        products={products}
       />
     </div>
   );

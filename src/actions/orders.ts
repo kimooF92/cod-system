@@ -563,3 +563,65 @@ export async function batchDispatchOrders(
   return { success: true, dispatchedCount: order_ids.length };
 }
 
+/**
+ * Ingests a batch of validated external order leads from Google Sheets or Webhook (FR-26, ARCH-4)
+ */
+export async function syncExternalOrders(
+  ordersToIngest: OrderInput[]
+): Promise<{ success: boolean; createdCount: number; orders?: Order[]; error?: string }> {
+  if (!ordersToIngest || ordersToIngest.length === 0) {
+    return { success: true, createdCount: 0 };
+  }
+
+  const createdRows: Database["public"]["Tables"]["orders"]["Row"][] = [];
+  const now = new Date().toISOString();
+
+  for (const input of ordersToIngest) {
+    const totalAmount = input.quantity * input.unit_price + input.delivery_fee;
+    const orderNumber = `ORD-2026-00${nextOrderSeq++}`;
+
+    const newRow: Database["public"]["Tables"]["orders"]["Row"] = {
+      id: `ord-sync-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+      order_number: orderNumber,
+      customer_name: input.customer_name,
+      phone: input.phone,
+      governorate: input.governorate,
+      address: input.address,
+      product_id: input.product_id,
+      quantity: input.quantity,
+      unit_price: input.unit_price,
+      delivery_fee: input.delivery_fee,
+      total_amount: totalAmount,
+      status: "NEW_ORDER",
+      attempt_count: 0,
+      last_contact_at: null,
+      next_follow_up_at: null,
+      courier_name: null,
+      tracking_code: null,
+      return_reason: null,
+      return_fee: 3.5,
+      source: input.source || "Google Sheets",
+      creative_id: input.creative_id || null,
+      notes: input.notes || "Synced from Google Sheets",
+      created_at: now,
+      updated_at: now,
+    };
+
+    createdRows.push(newRow);
+  }
+
+  try {
+    const supabase = await createServerSupabaseClient();
+    await (supabase.from("orders") as any).insert(createdRows);
+  } catch {
+    // ignore
+  }
+
+  memoryOrders = [...createdRows, ...memoryOrders];
+
+  revalidatePath("/orders");
+  revalidatePath("/");
+  return { success: true, createdCount: createdRows.length, orders: createdRows as any };
+}
+
+
